@@ -9,6 +9,10 @@ dc.colorMixin = function (_chart) {
     var _colors = d3.scale.category20c();
     var _defaultAccessor = true;
 
+    // Used for the colorLegend
+    var colorRow;
+    var captionRow;
+
     var _colorAccessor = function (d) { return _chart.keyAccessor()(d); };
 
     /**
@@ -134,6 +138,49 @@ dc.colorMixin = function (_chart) {
             return _chart.getColor;
         }
         _chart.getColor = _;
+        return _chart;
+    };
+
+    _chart.showLegend = function(selector){
+        _chart.showColorLegend = true;
+
+        var table = d3.select(selector).append("table")
+            .attr("id","table_legend");
+
+        colorRow = table.append("tr").attr("id","colorRow");
+        captionRow = table.append("tr").attr("id","captionRow");
+
+        return _chart;
+    };
+
+    _chart.renderLegend = function(){
+        var length = _colors.range().length+1;
+
+        var tdColor = colorRow.selectAll("td").data(_colors.range());
+
+        // Displays the color row
+        tdColor.enter().append("td");
+        tdColor.exit().remove();
+        tdColor
+            .html("&nbsp;")
+            .attr("style",function(d){
+                return "width: "+100/length+"%; background-color: "+d;
+            })
+            .attr("title",function(d){
+                return d3.round(_colors.invertExtent(d)[0],1)+"-"+d3.round(_colors.invertExtent(d)[1],1);
+            });
+
+        // Displays the caption row
+        var tdCaption = captionRow.selectAll("td").data(_colors.range());
+
+        tdCaption.enter().append("td");
+        tdCaption.exit().remove();
+        tdCaption
+            .text(function(d){
+                return d3.round(_colors.invertExtent(d)[0],1);
+            });
+
+
         return _chart;
     };
 
