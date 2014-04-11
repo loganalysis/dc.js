@@ -5,5 +5,5 @@ script:
   - 'if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then grunt ci; else grunt ci-pull; fi'
 env:
   global:
-  - secure: Kt+5IJDJRVwr28xRnmR5YDsJceXDcDR21/JUBfk6DYFixPbIq7LCPnZUmiSZQs8akU95ucXwB5hsirUAdEhXdYKilec6go70lticVlZBLy8IdJ+Di1uPwMOeMHvalC2P0woIRJSMzP8u5E+e+5ASggTjsXID7/p1rE0jXtoOueQ=
-  - secure: TED5eLMxEsyIGzKP8xxhyRDbKlIX9POzj1qgan40a8rkwIVzkdglkviLAXJJeP0ilc1GeGz1ctXyA6NAZt7RHB79mdQbH9iV1AsR29ItH4jdBs7eWRybDRKYRlmOntH0n7zlJDB4qQMxvNdI8BKYrPQymgZ3jtRJ/INOvLerg1g=
+  - secure: "FSVlpN4CS68zetNuV5K2l6YjwLO6oIBi0tnKjo1938zwOJQk8A9ZaZ28YecrMotGG+zhiuOC7ejUJQbnD9RES8GBvecSpZ9uciy4M4DfJmSkr/YiLwB5JEKTlivhyMdoCQD9G/NNlsnxX7/G6+/Tam3/iCe6GIj82Cr3tZbLKKM="
+  - secure: "Ez5EuoexKn5vdbjdarYXuP4CEfPjgQAKcmyV0FFnS3fSbXcP1NwVmQgxOFO+5rvh26GKtIoHBwLgZSRxqUA6SMmJ0H3UqnQYZMOxNvcKhvle7MTgO7NI63hK8tAonuVcbQ01JG1ONqO/l8yCDWKt3Hz6jMu6rz8t7WXIK767nFM="
