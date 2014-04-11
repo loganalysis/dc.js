@@ -73,7 +73,7 @@
 
     function testCallBackRoll2(){
         usChart.removeGeoJson("regions")
-                    .setCallbackOnRoolUp(testCallBackRoll1)
+                    .setCallbackOnRollUp(testCallBackRoll1)
                     .dimension(BigRegions)
                     .group(BigstateRaisedSum)
                     .render();
@@ -135,7 +135,7 @@
                     .colors(d3.scale.quantize().range(["#ffffb2","#fed976","#feb24c","#fd8d3c","#f03b20","#bd0026"]))
                     .colorDomain([0, 100])
                     .colorCalculator(function (d) { return d ? usChart.colors()(d) : '#ccc'; })
-                    .setCallbackOnRoolUp(testCallBackRoll1)
+                    .setCallbackOnRollUp(testCallBackRoll1)
                     .dimension(BigRegions)
                     .group(BigstateRaisedSum)
                     .overlayGeoJson(franceJson, "BigRegions", function (d) {
@@ -162,7 +162,7 @@
                     .colors(d3.scale.quantize().range(["#f7fcfd","#e5f5f9","#ccece6","#99d8c9","#66c2a4","#41ae76","#238b45","#005824"]))
                     .colorDomain([0, 200])
                     .colorCalculator(function (d) { return d ? usChart.colors()(d) : '#ccc'; })
-                    .setCallbackOnRoolUp(testCallBackRoll2)
+                    .setCallbackOnRollUp(testCallBackRoll2)
                     .dimension(states)
                     .group(stateRaisedSum)
                     .overlayGeoJson(franceJson, "regions", function (d) {
