@@ -7,3 +7,9 @@ env:
   global:
   - secure: "FSVlpN4CS68zetNuV5K2l6YjwLO6oIBi0tnKjo1938zwOJQk8A9ZaZ28YecrMotGG+zhiuOC7ejUJQbnD9RES8GBvecSpZ9uciy4M4DfJmSkr/YiLwB5JEKTlivhyMdoCQD9G/NNlsnxX7/G6+/Tam3/iCe6GIj82Cr3tZbLKKM="
   - secure: "Ez5EuoexKn5vdbjdarYXuP4CEfPjgQAKcmyV0FFnS3fSbXcP1NwVmQgxOFO+5rvh26GKtIoHBwLgZSRxqUA6SMmJ0H3UqnQYZMOxNvcKhvle7MTgO7NI63hK8tAonuVcbQ01JG1ONqO/l8yCDWKt3Hz6jMu6rz8t7WXIK767nFM="
+
+notifications:
+  irc:
+    channels:
+      - "irc.freenode.org#loganalysis"
+    use_notice: true
