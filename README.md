@@ -1,5 +1,5 @@
 [![Build Status](https://api.travis-ci.org/loganalysis/dc.js.png?branch=master)](http://travis-ci.org/loganalysis/dc.js)
-[![Sauce Status](https://saucelabs.com/buildstatus/loganalysis_csjs)](https://saucelabs.com/u/loganalysis_csjs)
+[![Sauce Status](https://saucelabs.com/buildstatus/loganalysis_dcjs)](https://saucelabs.com/u/loganalysis_dcjs)
 
 dc.js
 =====
