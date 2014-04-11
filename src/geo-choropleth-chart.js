@@ -31,7 +31,7 @@ var chart2 = dc.compositeChart('#us-chart2', 'chartGroupA');
 
 **/
 dc.geoChoroplethChart = function (parent, chartGroup) {
-    var _chart = dc.colorMixin(dc.baseMixin({}));
+    var _chart = dc.wheelMixin(dc.colorMixin(dc.baseMixin({})));
 
     _chart.colorAccessor(function (d) {
         return d || 0;
@@ -42,13 +42,24 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
 
     var _geoJsons = [];
 
+    _chart.layers = function() {
+        return _chart.svg().select("g.layers");
+    };
+
     _chart._doRender = function () {
         _chart.resetSvg();
-        for (var layerIndex = 0; layerIndex < _geoJsons.length; ++layerIndex) {
-            var states = _chart.svg().append('g')
-                .attr('class', 'layer' + layerIndex);
+        _chart.svg()
+            .on('mousewheel', onMouseWheelRollUp)
+            .on("DOMMouseScroll", onMouseWheelRollUp) // older versions of Firefox
+            .on("wheel", onMouseWheelRollUp) // newer versions of Firefox
+            .call(d3.behavior.drag().on("drag", panMap))
+          .append("g").attr("class", "layers");
 
-            var regionG = states.selectAll('g.' + geoJson(layerIndex).name)
+        for (var layerIndex = 0; layerIndex < _geoJsons.length; ++layerIndex) {
+            var regions = _chart.layers().append("g")
+                .attr("class", "layer" + layerIndex);
+
+            var regionG = regions.selectAll("g." + geoJson(layerIndex).name)
                 .data(geoJson(layerIndex).data)
                 .enter()
                 .append('g')
@@ -63,6 +74,9 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
 
             plotData(layerIndex);
         }
+
+        _chart._adaptTo({ "type": "GeometryCollection", "geometries": geoJson(_geoJsons.length-1).data}, 0);
+
         _projectionFlag = false;
     };
 
@@ -73,8 +87,9 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
             var regionG = renderRegionG(layerIndex);
 
             renderPaths(regionG, layerIndex, data);
-
             renderTitle(regionG, layerIndex, data);
+
+            if (_chart.showColorLegend) _chart.renderLegend();
         }
     }
 
@@ -147,7 +162,10 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
             })
             .on('click', function (d) {
                 return _chart.onClick(d, layerIndex);
-            });
+            })
+            .on("mousewheel", onMouseWheelDrillDownRollUp)
+            .on("DOMMouseScroll",  onMouseWheelDrillDownRollUp) // older versions of Firefox
+            .on("wheel",  onMouseWheelDrillDownRollUp); // newer versions of Firefox
 
         dc.transition(paths, _chart.transitionDuration()).attr('fill', function (d, i) {
             return _chart.getColor(data[geoJson(layerIndex).keyAccessor(d)], i);
@@ -155,11 +173,13 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
     }
 
     _chart.onClick = function (d, layerIndex) {
-        var selectedRegion = geoJson(layerIndex).keyAccessor(d);
-        dc.events.trigger(function () {
-            _chart.filter(selectedRegion);
-            _chart.redrawGroup();
-        });
+        if (!d3.event.defaultPrevented) {
+            var selectedRegion = geoJson(layerIndex).keyAccessor(d);
+            dc.events.trigger(function () {
+                _chart.filter(selectedRegion);
+                _chart.redrawGroup();
+            });
+        }
     };
 
     function renderTitle(regionG, layerIndex, data) {
@@ -292,11 +312,142 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
                 geoJsons.push(layer);
             }
         }
-
         _geoJsons = geoJsons;
 
         return _chart;
     };
+
+    /**
+     * Call the function onMouseWheel with rigth parameters
+     */
+    function onMouseWheelRollUp(d) {
+        _chart.onMouseWheel(d, false, true);
+    }
+
+    function onMouseWheelDrillDown(d) {
+        _chart.onMouseWheel(d, true, false);
+    }
+
+    function onMouseWheelDrillDownRollUp(d) {
+        _chart.onMouseWheel(d, true, true);
+    }
+
+    /**
+    * Callback to pan the map during drag
+    */
+    function panMap() {
+        _chart.addTranslate([d3.event.dx, d3.event.dy], 0);
+    }
+
+    /**
+     * Function called when drilling down on d : focus on d and call drill down of Display
+     */
+    _chart.onZoomIn = function(d) {
+        _chart._adaptTo(d, 750);
+        _chart.callbackZoomIn()(d.id);
+    };
+
+    /**
+     * Called when rolling up from the current level
+     */
+    _chart.onZoomOut = function() {
+        if (_geoJsons.length >= 2){
+            _chart._adaptTo({ "type": "GeometryCollection", "geometries": geoJson(_geoJsons.length - 2).data}, 700);
+
+            _chart.callbackZoomOut()();
+        }else{
+            _chart._adaptTo({ "type": "GeometryCollection", "geometries": geoJson(0).data}, 700);
+        }
+    };
+
+    /**
+     * Adapt the SVG display to a geographic feature (an element or a set of elements) of the map
+     */
+    _chart._adaptTo = function (feature, transition) {
+        var b = _geoPath.bounds(feature);
+        var t = getTransformFromBounds(b);
+        setTransform(t.scale, t.translate, transition);
+        return _chart;
+    };
+
+    /**
+     * Translate the current SVG shown
+     */
+    _chart.addTranslate = function (translate, transition) {
+        _chart.layers().transition()
+            .duration(transition)
+            .attr("transform", "translate(" + translate + ") " + _chart.layers().attr("transform"));
+    };
+
+    /**
+    * Scale (zoom / unzoom) on the SVG from the center of the current display
+    */
+    _chart.addScale = function (scale, transition) {
+
+        var transformInit = parseTransform(_chart.layers().attr("transform"));
+
+        var scaleInit = transformInit.scale[0];
+
+        var t = transformInit.translate;
+        var c = [_chart.width() / 2, _chart.height() / 2];
+
+        var translate = [c[0] + (t[0] - c[0]) * scale,
+                         c[1] + (t[1] - c[1]) * scale];
+
+        setTransform(scaleInit * scale, translate, transition);
+    };
+
+    /**
+     * Set the transform (scale & translate) of the SVG from scratch
+     */
+    function setTransform (scale, translate, transition) {
+        _chart.layers()
+            .transition()
+            .duration(transition)
+            .style("stroke-width", 1.5 / scale + "px")
+            .attr("transform", "translate(" + translate + ") scale(" + scale + ") ");
+    }
+
+    /**
+     * Get translate & scale parameters needed to adapt to the input bounds
+     */
+    function getTransformFromBounds (b) {
+        var s = 0.95 / Math.max((b[1][0] - b[0][0]) / _chart.width(), (b[1][1] - b[0][1]) / _chart.height());
+        var t = [(_chart.width() - s * (b[1][0] + b[0][0])) / 2, (_chart.height() - s * (b[1][1] + b[0][1])) / 2];
+
+        return {scale: s, translate: t};
+    }
+
+    /**
+     * Function to parse the transform parameter of the SVG
+     */
+    function parseTransform (a){
+        if (a === null) {
+            a = "";
+        }
+        var b={};
+        a = a.match(/(\w+\((\-?\d+\.?\d*,?)+\))/g);
+
+        for (var i in a){
+            var c = a[i].match(/[\w\.\-]+/g);
+            b[c.shift()] = c;
+        }
+
+        if (b.translate === undefined) {
+            b.translate = [0, 0];
+        }
+        else if (b.translate[1] === undefined) {
+            b.translate[1] = 0;
+        }
+        if (b.scale === undefined) {
+            b.scale = [1, 1];
+        }
+        else if (b.scale[1] === undefined) {
+            b.scale[1] = b.scale[0];
+        }
+
+        return b;
+    }
 
     return _chart.anchor(parent, chartGroup);
 };
