@@ -333,14 +333,12 @@ dc.coordinateGridMixin = function (_chart) {
     .xUnits.
     **/
     _chart.xUnitCount = function () {
-        if (_unitCount === undefined) {
-            var units = _chart.xUnits()(_chart.x().domain()[0], _chart.x().domain()[1], _chart.x().domain());
+        var units = _chart.xUnits()(_chart.x().domain()[0], _chart.x().domain()[1], _chart.x().domain());
 
-            if (units instanceof Array) {
-                _unitCount = units.length;
-            } else {
-                _unitCount = units;
-            }
+        if (units instanceof Array) {
+            _unitCount = units.length;
+        } else {
+            _unitCount = units;
         }
 
         return _unitCount;

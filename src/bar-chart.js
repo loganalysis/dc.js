@@ -37,7 +37,7 @@ dc.barChart = function (parent, chartGroup) {
     var MIN_BAR_WIDTH = 1;
     var DEFAULT_GAP_BETWEEN_BARS = 2;
 
-    var _chart = dc.stackMixin(dc.coordinateGridMixin({}));
+    var _chart = dc.wheelMixin(dc.stackMixin(dc.coordinateGridMixin({})));
 
     var _gap = DEFAULT_GAP_BETWEEN_BARS;
     var _centerBar = false;
@@ -97,6 +97,11 @@ dc.barChart = function (parent, chartGroup) {
             enter.append('title').text(dc.pluck('data', _chart.title(d.name)));
         }
 
+        if (!_chart.mouseZoomable())
+            bars.on("mousewheel", onMouseWheelDrillDownRollUp)
+                .on("DOMMouseScroll", onMouseWheelDrillDownRollUp) // older versions of Firefox
+                .on("wheel", onMouseWheelDrillDownRollUp); // newer versions of Firefox
+
         if (_chart.isOrdinal()) {
             bars.on('click', onClick);
         }
@@ -134,21 +139,19 @@ dc.barChart = function (parent, chartGroup) {
     }
 
     function calculateBarWidth() {
-        if (_barWidth === undefined) {
-            var numberOfBars = _chart.xUnitCount();
+        var numberOfBars = _chart.xUnitCount();
 
-            // please can't we always use rangeBands for bar charts?
-            if (_chart.isOrdinal() && _gap === undefined) {
-                _barWidth = Math.floor(_chart.x().rangeBand());
-            } else if (_gap) {
-                _barWidth = Math.floor((_chart.xAxisLength() - (numberOfBars - 1) * _gap) / numberOfBars);
-            } else {
-                _barWidth = Math.floor(_chart.xAxisLength() / (1 + _chart.barPadding()) / numberOfBars);
-            }
+        // please can't we always use rangeBands for bar charts?
+        if (_chart.isOrdinal() && _gap===undefined) {
+            _barWidth = Math.floor(_chart.x().rangeBand());
+        } else if (_gap) {
+            _barWidth = Math.floor((_chart.xAxisLength() - (numberOfBars - 1) * _gap) / numberOfBars);
+        } else {
+            _barWidth = Math.floor(_chart.xAxisLength() / (1 + _chart.barPadding()) / numberOfBars);
+        }
 
-            if (_barWidth === Infinity || isNaN(_barWidth) || _barWidth < MIN_BAR_WIDTH) {
-                _barWidth = MIN_BAR_WIDTH;
-            }
+        if (_barWidth == Infinity || isNaN(_barWidth) || _barWidth < MIN_BAR_WIDTH) {
+            _barWidth = MIN_BAR_WIDTH;
         }
     }
 
@@ -307,6 +310,13 @@ dc.barChart = function (parent, chartGroup) {
         }
         return max;
     });
+
+    /**
+     * Call the function onMouseWheel with rigth parameters
+     */
+    function onMouseWheelDrillDownRollUp(d) {
+        _chart.onMouseWheel(d, true, true);
+    }
 
     return _chart.anchor(parent, chartGroup);
 };
