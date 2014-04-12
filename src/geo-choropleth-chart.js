@@ -42,6 +42,8 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
 
     var _geoJsons = [];
 
+    var _nbZoomLevels = 0;
+
     _chart.layers = function() {
         return _chart.svg().select("g.layers");
     };
@@ -163,11 +165,14 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
             .on('click', function (d) {
                 return _chart.onClick(d, layerIndex);
             })
-            .on("mousewheel", onMouseWheelDrillDownRollUp)
-            .on("DOMMouseScroll",  onMouseWheelDrillDownRollUp) // older versions of Firefox
-            .on("wheel",  onMouseWheelDrillDownRollUp); // newer versions of Firefox
+        if (layerIndex == _geoJsons.length - 1 && layerIndex < _nbZoomLevels) {
+            paths
+                .on("mousewheel", onMouseWheelDrillDownRollUp)
+                .on("DOMMouseScroll",  onMouseWheelDrillDownRollUp) // older versions of Firefox
+                .on("wheel",  onMouseWheelDrillDownRollUp); // newer versions of Firefox
+        }
 
-        dc.transition(paths, _chart.transitionDuration()).attr('fill', function (d, i) {
+        dc.transition(paths, _chart.transitionDuration()).attr("fill", function (d, i) {
             return _chart.getColor(data[geoJson(layerIndex).keyAccessor(d)], i);
         });
     }
@@ -314,6 +319,14 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
         }
         _geoJsons = geoJsons;
 
+        return _chart;
+    };
+
+    /**
+     * Set the number of zoom levels available
+     */
+    _chart.setNbZoomLevels = function (nbLevels) {
+        _nbZoomLevels = nbLevels;
         return _chart;
     };
 
