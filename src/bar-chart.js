@@ -93,6 +93,11 @@ dc.barChart = function (parent, chartGroup) {
             .attr("fill", dc.pluck('data',_chart.getColor))
             .attr("height", 0);
 
+        if (_chart.callBackDrillDown!==undefined && _chart.callBackRollUp!==undefined && !_chart.mouseZoomable())
+            bars.on("mousewheel", onMouseWheelDrillDownRollUp)
+                .on("DOMMouseScroll",  onMouseWheelDrillDownRollUp) // older versions of Firefox
+                .on("wheel",  onMouseWheelDrillDownRollUp); // newer versions of Firefox
+
         if (_chart.renderTitle())
             bars.append("title").text(dc.pluck('data',_chart.title(d.name)));
 
@@ -283,6 +288,98 @@ dc.barChart = function (parent, chartGroup) {
         }
         return max;
     });
+
+    /**
+     * Set the callback function for the drillDown
+     */
+    _chart.setCallbackOnDrillDown = function (d) {
+      _chart.callBackDrillDown = d;
+
+      return _chart;
+    };
+
+    /**
+     * Set the callback function for the rollUp
+     */
+    _chart.setCallbackOnRollUp = function (d) {
+      _chart.callBackRollUp = d;
+      return _chart;
+    };
+
+    /**
+     * Call the function onMouseWheel with rigth parameters
+     */
+    function onMouseWheelRollUp(d) {
+      onMouseWheel(d, false, true);
+    }
+
+    function onMouseWheelDrillDown(d) {
+      onMouseWheel(d, true, false);
+    }
+
+    function onMouseWheelDrillDownRollUp(d) {
+      onMouseWheel(d, true, true);
+    }
+
+    /**
+     * Called when scrolling with mouse wheel
+     */
+    function onMouseWheel(d, drillDown, rollUp) {
+        if (drillDown === undefined)
+            drillDown = true;
+        if (rollUp === undefined)
+            rollUp = true;
+
+        // drill down if zoom-in
+        if ((d3.event.deltaY < 0 || d3.event.wheelDeltaY > 0) && drillDown) {
+            if (!_chart._disabledActions.allMouseWheel) {
+                _chart._delayAction('allMouseWheel', 700);
+                _chart._drillDown(d);
+            }
+        }
+        // roll up if zoom-out
+        else if ((d3.event.deltaY > 0 || d3.event.wheelDeltaY < 0) && rollUp) {
+            if (!_chart._disabledActions.allMouseWheel) {
+                _chart._delayAction('allMouseWheel', 700);
+                _chart._rollUp();
+            }
+        }
+
+        // prevent scrolling on page
+        d3.event.preventDefault();
+        return false;
+    }
+
+    /**
+     * These 3 elements below allow to disable roll-up and drill-down during a certain time.
+     * It is necessary because the mousewheel call the function several time successively.
+     */
+    _chart._disabledActions = {
+        allMouseWheel : false,
+    };
+
+    _chart._delayAction = function(name, delay) {
+        _chart._disabledActions[name] = true;
+        d3.timer(function () { _chart._enableAction(name); return true; }, delay);
+    };
+
+    _chart._enableAction = function (name) {
+        _chart._disabledActions[name] = false;
+    };
+
+    /**
+     * Function called when drilling down on d : call the callBackDrillDown function
+     */
+    _chart._drillDown = function(d) {
+        _chart.callBackDrillDown(d.id);
+    };
+
+    /**
+     * Function called when rolling up: call the callBackRollUp function
+     */
+    _chart._rollUp = function() {
+        _chart.callBackRollUp();
+    };
 
     return _chart.anchor(parent, chartGroup);
 };
