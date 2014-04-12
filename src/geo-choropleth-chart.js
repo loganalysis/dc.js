@@ -320,14 +320,14 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
         // drill down if zoom-in
         if ((d3.event.deltaY < 0 || d3.event.wheelDeltaY > 0) && drillDown) {
             if (!_chart._disabledActions.allMouseWheel) {
-                _chart._delayAction('allMouseWheel', 700);
+                _chart._delayAction('allMouseWheel', 3000);
                 _chart._drillDown(d);
             }
         }
         // roll up if zoom-out
         else if ((d3.event.deltaY > 0 || d3.event.wheelDeltaY < 0) && rollUp) {
             if (!_chart._disabledActions.allMouseWheel) {
-                _chart._delayAction('allMouseWheel', 700);
+                _chart._delayAction('allMouseWheel', 3000);
                 _chart._rollUp();
             }
         }
