@@ -288,7 +288,7 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
     /**
      * Set the callback function for the rollUp
      */
-    _chart.setCallbackOnRoolUp = function (d) {
+    _chart.setCallbackOnRollUp = function (d) {
       _chart.callBackRollUp = d;
       return _chart;
     };
