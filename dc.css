@@ -315,3 +315,21 @@ div.dc-chart {
     pointer-events: all;
     cursor: pointer;
 }
+
+.dc-chart .dc-word {
+    padding: 3px 5px;
+    float: left;
+    cursor: pointer;
+}
+
+.dc-chart .dc-word-clear {
+    clear: both;
+}
+
+.dc-chart .dc-word.selected {
+    font-weight: bold;
+}
+
+.dc-chart .dc-word.deselected {
+    color: #CCC !important;
+}
