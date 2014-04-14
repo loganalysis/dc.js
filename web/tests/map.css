@@ -1,0 +1,17 @@
+table {
+  border-collapse: separate;
+  border-spacing: 2px;
+  border-color: gray;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+}
+
+#colorRow {
+  line-height: 12px;
+  font-size: 12px;
+  width: 100%;
+}
