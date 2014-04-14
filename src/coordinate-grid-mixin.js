@@ -727,6 +727,12 @@ dc.coordinateGridMixin = function (_chart) {
                 .attr("class", "brush")
                 .attr("transform", "translate(" + _chart.margins().left + "," + _chart.margins().top + ")")
                 .call(_brush.x(_chart.x()));
+
+           if (_chart.callBackDrillDown!==undefined && _chart.callBackRollUp!==undefined)
+                gBrush.on("mousewheel", onScroll)
+                    .on("DOMMouseScroll", onScroll) // older versions of Firefox
+                    .on("wheel", onScroll); // newer versions of Firefox
+
             _chart.setBrushY(gBrush);
             _chart.setHandlePaths(gBrush);
 
@@ -1026,6 +1032,22 @@ dc.coordinateGridMixin = function (_chart) {
 
     function hasRangeSelected(range) {
         return range instanceof Array && range.length > 1;
+    }
+
+    /**
+     * Remove the brush when scrolled
+     */
+    function onScroll() {
+        if (!_chart.mouseZoomable()){
+            var oldTransition = _chart.transitionDuration();
+            _chart.brushOn(false)
+                .transitionDuration(0)
+                ._doRender()
+                .transitionDuration(oldTransition);
+
+            // prevent scrolling on page
+            d3.event.preventDefault();
+        }
     }
 
     return _chart;
