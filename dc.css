@@ -323,3 +323,7 @@ div.dc-chart {
 .dc-chart .dc-word.deselected {
     color: #CCC !important;
 }
+
+.dc-color-legend {
+    width: 100%;
+}
