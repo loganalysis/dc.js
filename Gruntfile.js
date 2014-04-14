@@ -306,6 +306,7 @@ module.exports.jsFiles = [
     "src/composite-chart.js",
     "src/series-chart.js",
     "src/geo-choropleth-chart.js",
+    "src/word-cloud-chart.js",
     "src/bubble-overlay.js",
     "src/row-chart.js",
     "src/legend.js",
