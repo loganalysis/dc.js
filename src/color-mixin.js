@@ -145,10 +145,10 @@ dc.colorMixin = function (_chart) {
         _chart.showColorLegend = true;
 
         var table = d3.select(selector).append("table")
-            .attr("id","table_legend");
+            .attr("class","dc-color-legend");
 
-        colorRow = table.append("tr").attr("id","colorRow");
-        captionRow = table.append("tr").attr("id","captionRow");
+        colorRow = table.append("tr").attr("class","dc-color-legend-color-row");
+        captionRow = table.append("tr").attr("class","dc-color-legend-caption-row");
 
         return _chart;
     };

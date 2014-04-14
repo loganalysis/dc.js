@@ -315,3 +315,7 @@ div.dc-chart {
     pointer-events: all;
     cursor: pointer;
 }
+
+.dc-color-legend {
+    width: 100%;
+}
