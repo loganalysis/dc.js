@@ -368,10 +368,10 @@ dc.barChart = function (parent, chartGroup) {
     };
 
     /**
-     * Function called when drilling down on d : call the callBackDrillDown function
+     * Function called when drilling down on d : call the callBackDrillDown function with the id of the element drilled
      */
     _chart._drillDown = function(d) {
-        _chart.callBackDrillDown(d.id);
+        _chart.callBackDrillDown(d.x);
     };
 
     /**
