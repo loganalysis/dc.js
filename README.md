@@ -1,6 +1,5 @@
-[![Build Status](https://api.travis-ci.org/dc-js/dc.js.png?branch=master)](http://travis-ci.org/dc-js/dc.js)
-[![Sauce Status](https://saucelabs.com/buildstatus/sclevine)](https://saucelabs.com/u/sclevine)
-[![NPM Status](https://badge.fury.io/js/dc.png)](http://badge.fury.io/js/dc)
+[![Build Status](https://api.travis-ci.org/loganalysis/dc.js.png?branch=master)](http://travis-ci.org/loganalysis/dc.js)
+[![Sauce Status](https://saucelabs.com/buildstatus/loganalysis_dcjs)](https://saucelabs.com/u/loganalysis_dcjs)
 
 dc.js
 =====
