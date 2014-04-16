@@ -54,8 +54,9 @@
         usChart.removeGeoJson("BigRegions")
             .setCallbackOnDrillDown(testCallBackDrill1)
             .dimension(states)
-            .group(stateRaisedSum)
-            .render();
+            .group(stateRaisedSum);
+
+        dc.redrawAll();
     };
 
     function testCallBackRoll2(){
@@ -64,8 +65,9 @@
         usChart.removeGeoJson("regions")
             .setCallbackOnRollUp(testCallBackRoll1)
             .dimension(BigRegions)
-            .group(BigstateRaisedSum)
-            .render();
+            .group(BigstateRaisedSum);
+
+        dc.redrawAll();
     };
 
     var numberFormat = d3.format(".2f");
