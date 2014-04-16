@@ -13,32 +13,17 @@
 
 <div class="container">
 
-    <h2>US Venture Capital Landscape 2011</h2>
-
-    <p>
-        This is a <a href="../index.html">dc.js</a> example showing how GeoJson Polygon can be associated with
-        crossfilter
-        dimension and group using a choropleth chart. Different regions can be colored differently based on different
-        calculation (amount raised). Like any other dc.js chart a choropleth chart can then be mixed with other dc.js
-        chart
-        or your own custom d3 drawing. In this example we have shown how it can work with multiple bubble chart.
-    </p>
-
-    <p>
-        Public data source
-        <a href="http://buzzdata.com/azad2002/the-united-states-of-venture-capital-2011#!/data" target="_blank">BuzzData.com</a>.
-    </p>
+    <h2>Integration test Map</h2>
 
     <div id="us-chart">
-        <strong>VC Distribution by States (color: total amount raised)</strong>
         <a class="reset" href="javascript:usChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
-        | Zoom:
+        Zoom:
 			<a href="javascript:usChart.addScale(1.5, 700);">++</a>
 			<a href="javascript:usChart.addScale(1.2, 700);">+</a>
 			<a href="javascript:usChart.addScale(1/1.2, 700);">-</a>
 			<a href="javascript:usChart.addScale(1/1.5, 700);">--</a>
-                        <a href="javascript:testTropBon();">Fait peter</a>
-                        <a href="javascript:testTropBonEncore();">Encore</a>
+                        <a href="javascript:testTropBon();">Appel France</a>
+                        <a href="javascript:testTropBonEncore();">Appel Bassin Parisien</a>
         <span class="reset" style="display: none;"> | Current filter: <span class="filter"></span></span>
 
         <div class="clearfix"></div>
@@ -49,34 +34,40 @@
 
 </div>
 
-<a href="https://github.com/dc-js/dc.js"><img style="position: absolute; top: 0; right: 0; border: 0;"
-                                                  src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
-                                                  alt="Fork me on GitHub"></a>
-
 <script type="text/javascript" src="../js/d3.js"></script>
 <script type="text/javascript" src="../js/crossfilter.js"></script>
 <script type="text/javascript" src="../js/dc.js"></script>
 <script type="text/javascript">
     var BigRegions, BigstateRaisedSum, states, stateRaisedSum;
 
-    function testCallBackDrill(d){
-        console.log(d);
+    function testCallBackDrill1(d){
+        console.log("L'élément demandé est",d);
+        testFrance()
+    };
+
+    function testCallBackDrill2(d){
+        console.log("L'élément demandé est",d);
+        testBassin();
     };
 
     function testCallBackRoll1(){
-    console.log("test");
+        console.log("CallBack1");
+
         usChart.removeGeoJson("BigRegions")
-                    .dimension(states)
-                    .group(stateRaisedSum)
-                    .render();
+            .setCallbackOnDrillDown(testCallBackDrill1)
+            .dimension(states)
+            .group(stateRaisedSum)
+            .render();
     };
 
     function testCallBackRoll2(){
+        console.log("CallBack2");
+
         usChart.removeGeoJson("regions")
-                    .setCallbackOnRollUp(testCallBackRoll1)
-                    .dimension(BigRegions)
-                    .group(BigstateRaisedSum)
-                    .render();
+            .setCallbackOnRollUp(testCallBackRoll1)
+            .dimension(BigRegions)
+            .group(BigstateRaisedSum)
+            .render();
     };
 
     var numberFormat = d3.format(".2f");
@@ -96,8 +87,9 @@
         d3.json("europe.geo.json", function (statesJson) {
 
 
-            usChart.setCallbackOnDrillDown(testCallBackDrill)
+            usChart.setCallbackOnDrillDown(testCallBackDrill1)
                     .showLegend("#map_legend")
+                    .setNbZoomLevels(2)
                     .width(990)
                     .height(500)
                     .dimension(states)
@@ -119,7 +111,7 @@
     });
 
 
-    function testTropBon(){
+    function testFrance(){
         d3.csv("vc.france.csv", function (csv) {    var data = crossfilter(csv);
 
         BigRegions = data.dimension(function (d) {
@@ -131,7 +123,7 @@
 
 
         d3.json("france.geo.json", function (franceJson) {
-                usChart
+                usChart.setCallbackOnDrillDown(testCallBackDrill2)
                     .colors(d3.scale.quantize().range(["#ffffb2","#fed976","#feb24c","#fd8d3c","#f03b20","#bd0026"]))
                     .colorDomain([0, 100])
                     .colorCalculator(function (d) { return d ? usChart.colors()(d) : '#ccc'; })
@@ -142,12 +134,12 @@
                         return d.id;
                     });
 
-                dc.renderAll();
+                dc.redrawAll();
             });
       });
     }
 
-    function testTropBonEncore(){
+    function testBassin(){
         d3.csv("vc.bassin.csv", function (csv) {    var data = crossfilter(csv);
 
         var states = data.dimension(function (d) {
@@ -169,7 +161,7 @@
                         return d.id;
                     });
 
-                dc.renderAll();
+                dc.redrawAll();
             });
       });
     }
