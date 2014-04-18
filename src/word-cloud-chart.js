@@ -71,8 +71,8 @@ dc.wordCloudChart = function (parent, chartGroup) {
             .append('div')
             .attr("class", function (d) {
                 var selectClass = "";
-                if (isSelected(d.key)) { selectClass = " selected" };
-                if (isDeselected(d.key)) { selectClass = " deselected" };
+                if (isSelected(d.key)) { selectClass = " selected"; }
+                if (isDeselected(d.key)) { selectClass = " deselected"; }
                 return "dc-word" + selectClass;
             })
             .style("font-size", function (d) { return getSize(d.value)+"px"; })
@@ -149,9 +149,9 @@ dc.wordCloudChart = function (parent, chartGroup) {
         var drillDown;
         var rollUp;
 
-        if (drillDown == undefined)
+        if (drillDown === undefined)
             drillDown = true;
-        if (rollUp == undefined)
+        if (rollUp === undefined)
             rollUp = true;
 
         // drill down if zoom-in
