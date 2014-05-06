@@ -337,7 +337,7 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
     _chart.setNbZoomLevels = function (nbLevels) {
         _nbZoomLevels = nbLevels;
         return _chart;
-    }
+    };
 
     /**
      * Call the function onMouseWheel with rigth parameters
@@ -495,8 +495,9 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
             a = "";
         }
         var b={};
+        a = a.match(/(\w+\((\-?\d+\.?\d*,?)+\))/g);
 
-        for (var i in a = a.match(/(\w+\((\-?\d+\.?\d*,?)+\))/g)){
+        for (var i in a){
             var c = a[i].match(/[\w\.\-]+/g);
             b[c.shift()] = c;
         }
