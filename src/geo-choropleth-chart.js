@@ -167,6 +167,11 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
                 .on("mousewheel", onMouseWheelDrillDownRollUp)
                 .on("DOMMouseScroll",  onMouseWheelDrillDownRollUp) // older versions of Firefox
                 .on("wheel",  onMouseWheelDrillDownRollUp); // newer versions of Firefox
+        } else {
+          paths
+                .on("mousewheel", null)
+                .on("DOMMouseScroll", null) // older versions of Firefox
+                .on("wheel", null); // newer versions of Firefox
         }
 
         dc.transition(paths, _chart.transitionDuration()).attr("fill", function (d, i) {
