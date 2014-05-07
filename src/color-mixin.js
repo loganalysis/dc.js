@@ -10,8 +10,10 @@ dc.colorMixin = function (_chart) {
     var _defaultAccessor = true;
 
     // Used for the colorLegend
-    var colorRow;
-    var captionRow;
+    var _colorRow;
+    var _captionRow;
+    // Default format for numbers in the color legend
+    var _formatLegendNumber = function(d) { return d3.format(".3s")(d); };
 
     var _colorAccessor = function (d) { return _chart.keyAccessor()(d); };
 
@@ -147,16 +149,28 @@ dc.colorMixin = function (_chart) {
         var table = d3.select(selector).append("table")
             .attr("class","dc-color-legend");
 
-        colorRow = table.append("tr").attr("class","dc-color-legend-color-row");
-        captionRow = table.append("tr").attr("class","dc-color-legend-caption-row");
+        _colorRow = table.append("tr").attr("class","dc-color-legend-color-row");
+        _captionRow = table.append("tr").attr("class","dc-color-legend-caption-row");
 
+        return _chart;
+    };
+
+
+    /**
+    #### .legendNumberFormatter(f)
+      The function f given as a parameter is used to format numbers in the color legend.
+
+    **/
+    _chart.legendNumberFormatter = function(_){
+        if(!arguments.length) return _formatLegendNumber;
+        _formatLegendNumber = _;
         return _chart;
     };
 
     _chart.renderLegend = function(){
         var length = _colors.range().length+1;
 
-        var tdColor = colorRow.selectAll("td").data(_colors.range());
+        var tdColor = _colorRow.selectAll("td").data(_colors.range());
 
         // Displays the color row
         tdColor.enter().append("td");
@@ -167,17 +181,17 @@ dc.colorMixin = function (_chart) {
                 return "width: "+100/length+"%; background-color: "+d;
             })
             .attr("title",function(d){
-                return d3.round(_colors.invertExtent(d)[0],1)+"-"+d3.round(_colors.invertExtent(d)[1],1);
+                return _formatLegendNumber(_colors.invertExtent(d)[0])+"-"+_formatLegendNumber(_colors.invertExtent(d)[1]);
             });
 
         // Displays the caption row
-        var tdCaption = captionRow.selectAll("td").data(_colors.range());
+        var tdCaption = _captionRow.selectAll("td").data(_colors.range());
 
         tdCaption.enter().append("td");
         tdCaption.exit().remove();
         tdCaption
             .text(function(d){
-                return d3.round(_colors.invertExtent(d)[0],1);
+                return _formatLegendNumber(_colors.invertExtent(d)[0]);
             });
 
 
