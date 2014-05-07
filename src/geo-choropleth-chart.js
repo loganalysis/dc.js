@@ -160,15 +160,15 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
             .on("click", function (d) {
                 return _chart.onClick(d, layerIndex);
             });
-            
-            
+
+
         if (layerIndex == _geoJsons.length - 1 && layerIndex < _nbZoomLevels) {
             paths
                 .on("mousewheel", onMouseWheelDrillDownRollUp)
                 .on("DOMMouseScroll",  onMouseWheelDrillDownRollUp) // older versions of Firefox
                 .on("wheel",  onMouseWheelDrillDownRollUp); // newer versions of Firefox
         }
-        
+
         dc.transition(paths, _chart.transitionDuration()).attr("fill", function (d, i) {
             return _chart.getColor(data[geoJson(layerIndex).keyAccessor(d)], i);
         });
@@ -196,12 +196,12 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
 
     _chart._doRedraw = function () {
         for (var layerIndex = 0; layerIndex < _geoJsons.length; ++layerIndex) {
-            
+
             // reproject
             if(_projectionFlag) {
                 _chart.svg().selectAll("g." + geoJson(layerIndex).name + " path").attr("d", _geoPath);
             }
-            
+
             // add missing layers
             if(_chart.svg().selectAll("g.layer" + layerIndex).empty()) {
                 var regions = _chart.layers().append("g")
@@ -229,6 +229,8 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
             _chart.svg().selectAll("g.layer" + layerIndex).remove();
             layerIndex++;
         }
+
+        _chart._adaptTo({ "type": "GeometryCollection", "geometries": geoJson(_geoJsons.length-1).data}, 750);
 
         _projectionFlag = false;
     };
@@ -412,7 +414,7 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
      * Function called when drilling down on d : focus on d and call drill down of Display
      */
     _chart._drillDown = function(d) {
-        _chart._adaptTo(d, 750);
+        _chart._adaptTo(d, 700);
         _chart.callBackDrillDown(d.id);
     };
 
