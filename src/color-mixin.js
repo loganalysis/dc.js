@@ -152,6 +152,10 @@ dc.colorMixin = function (_chart) {
         _colorRow = table.append("tr").attr("class","dc-color-legend-color-row");
         _captionRow = table.append("tr").attr("class","dc-color-legend-caption-row");
 
+        _chart.renderlet(function(chart){
+            chart.renderLegend();
+        });
+
         return _chart;
     };
 
