@@ -1,6 +1,6 @@
 /**
 ## Geo Choropleth Chart
-Includes: [Color Mixin](#color-mixin), [Base Mixin](#base-mixin)
+Includes: [Wheel Mixin](#wheel-mixin), [Color Mixin](#color-mixin), [Base Mixin](#base-mixin)
 
 The geo choropleth chart is designed as an easy way to create a crossfilter driven choropleth map
 from GeoJson data. This chart implementation was inspired by [the great d3 choropleth
@@ -51,9 +51,9 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
     _chart._doRender = function () {
         _chart.resetSvg();
         _chart.svg()
-            .on('mousewheel', onMouseWheelRollUp)
-            .on("DOMMouseScroll", onMouseWheelRollUp) // older versions of Firefox
-            .on("wheel", onMouseWheelRollUp) // newer versions of Firefox
+            .on('mousewheel', function (d) { _chart.onMouseWheel(d, false, true); })
+            .on("DOMMouseScroll", function (d) { _chart.onMouseWheel(d, false, true); }) // older versions of Firefox
+            .on("wheel", function (d) { _chart.onMouseWheel(d, false, true); }) // newer versions of Firefox
             .call(d3.behavior.drag().on("drag", panMap))
           .append("g").attr("class", "layers");
 
@@ -167,9 +167,9 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
             })
         if (layerIndex == _geoJsons.length - 1 && layerIndex < _nbZoomLevels) {
             paths
-                .on("mousewheel", onMouseWheelDrillDownRollUp)
-                .on("DOMMouseScroll",  onMouseWheelDrillDownRollUp) // older versions of Firefox
-                .on("wheel",  onMouseWheelDrillDownRollUp); // newer versions of Firefox
+                .on("mousewheel", function (d) { _chart.onMouseWheel(d); })
+                .on("DOMMouseScroll",  function (d) { _chart.onMouseWheel(d); }) // older versions of Firefox
+                .on("wheel",  function (d) { _chart.onMouseWheel(d); }); // newer versions of Firefox
         } else {
             paths
                 .on("mousewheel", null)
@@ -336,47 +336,31 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
     };
 
     /**
-     * Call the function onMouseWheel with rigth parameters
-     */
-    function onMouseWheelRollUp(d) {
-        _chart.onMouseWheel(d, false, true);
-    }
-
-    function onMouseWheelDrillDown(d) {
-        _chart.onMouseWheel(d, true, false);
-    }
-
-    function onMouseWheelDrillDownRollUp(d) {
-        _chart.onMouseWheel(d, true, true);
-    }
-
-    /**
     * Callback to pan the map during drag
     */
     function panMap() {
         _chart.addTranslate([d3.event.dx, d3.event.dy], 0);
     }
 
-    /**
-     * Function called when drilling down on d : focus on d and call drill down of Display
-     */
-    _chart.onZoomIn = function(d) {
-        _chart._adaptTo(d, 750);
+    _chart._zoomIn = function (d) {
+        _chart._onZoomIn(d);
         _chart.callbackZoomIn()(d.id);
     };
 
-    /**
+    /*
+     * Function called when drilling down on d : focus on d and call drill down of Display
+     */
+    _chart._onZoomIn = function (d) {
+        _chart._adaptTo(d, 750);
+    };
+
+    /*
      * Called when rolling up from the current level
      */
-    _chart.onZoomOut = function() {
-        if (_geoJsons.length >= 2){
-            _chart._adaptTo({ "type": "GeometryCollection", "geometries": geoJson(_geoJsons.length - 2).data}, 700);
-
-            _chart.callbackZoomOut()();
-        }else{
-            _chart._adaptTo({ "type": "GeometryCollection", "geometries": geoJson(0).data}, 700);
-        }
+    _chart._onZoomOut = function () {
+        _chart._adaptTo({ "type": "GeometryCollection", "geometries": geoJson(Math.max(0, _geoJsons.length - 2)).data}, 700);
     };
+
 
     /**
      * Adapt the SVG display to a geographic feature (an element or a set of elements) of the map
