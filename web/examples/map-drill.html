@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>dc.js - US Venture Capital Landscape 2011</title>
+
+<meta charset="UTF-8">
+
+<link href="../css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="../css/dc.css"/>
+<link rel="stylesheet" type="text/css" href="map.css"/>
+<style type="text/css" media="screen">
+  table {
+    border-collapse: separate;
+    border-spacing: 2px;
+    border-color: gray;
+  }
+
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 100%;
+  }
+
+  #colorRow {
+    line-height: 12px;
+    font-size: 12px;
+    width: 100%;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <h2>Integration test Map</h2>
+
+  <div id="us-chart">
+    <a class="reset" href="javascript:usChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+    Zoom:
+    <a href="javascript:usChart.addScale(1.5, 700);">++</a>
+    <a href="javascript:usChart.addScale(1.2, 700);">+</a>
+    <a href="javascript:usChart.addScale(1/1.2, 700);">-</a>
+    <a href="javascript:usChart.addScale(1/1.5, 700);">--</a>
+    <span class="reset" style="display: none;"> | Current filter: <span class="filter"></span></span>
+
+    <div class="clearfix"></div>
+
+
+  </div>
+  <div id="map_legend"></div>
+
+</div>
+
+<script type="text/javascript" src="../js/d3.js"></script>
+<script type="text/javascript" src="../js/crossfilter.js"></script>
+<script type="text/javascript" src="../js/dc.js"></script>
+<script type="text/javascript">
+var BigRegions, BigstateRaisedSum, states, stateRaisedSum;
+
+function testCallBackDrill1(d){
+  console.log("L'élément demandé est",d);
+  testFrance()
+};
+
+function testCallBackDrill2(d){
+  console.log("L'élément demandé est",d);
+  testBassin();
+};
+
+function testCallBackRoll1(){
+  console.log("CallBack1");
+
+  usChart.removeGeoJson("BigRegions")
+    .callbackZoomIn(testCallBackDrill1)
+    .dimension(states)
+    .group(stateRaisedSum);
+
+  dc.redrawAll();
+};
+
+function testCallBackRoll2(){
+  console.log("CallBack2");
+
+  usChart.removeGeoJson("regions")
+    .callbackZoomOut(testCallBackRoll1)
+    .dimension(BigRegions)
+    .group(BigstateRaisedSum);
+
+  dc.redrawAll();
+};
+
+var numberFormat = d3.format(".2f");
+
+var usChart = dc.geoChoroplethChart("#us-chart");
+
+d3.csv("/web/geo/vc.europe.csv", function (csv) {
+    var data = crossfilter(csv);
+
+    states = data.dimension(function (d) {
+      return d["State"];
+      });
+    stateRaisedSum = states.group().reduceSum(function (d) {
+      return d["Raised"];
+      });
+
+    d3.json("/web/geo/europe.geo.json", function (statesJson) {
+
+
+      usChart.callbackZoomIn(testCallBackDrill1)
+      //.showLegend("#map_legend")
+      .setNbZoomLevels(2)
+      .width(990)
+      .height(500)
+      .dimension(states)
+      .group(stateRaisedSum)
+      .colors(d3.scale.quantize().range(["#E2F2FF", "#C4E4FF", "#9ED2FF", "#81C5FF", "#6BBAFF", "#51AEFF", "#36A2FF", "#1E96FF", "#0089FF", "#0061B5"]))
+      .colorDomain([0, 200])
+      .colorCalculator(function (d) { return d ? usChart.colors()(d) : '#ccc'; })
+      .projection(d3.geo.mercator())
+      .overlayGeoJson(statesJson, "country", function (d) {
+        return d.id;
+        })
+      .title(function (d) {
+        return "State: " + d.key + "\nTotal Amount Raised: " + numberFormat(d.value ? d.value : 0) + "M";
+        });
+
+      dc.renderAll();
+
+    });
+});
+
+
+function testFrance(){
+  d3.csv("/web/geo/vc.france.csv", function (csv) {
+      var data = crossfilter(csv);
+
+      BigRegions = data.dimension(function (d) {
+        return d["State"];
+        });
+      BigstateRaisedSum = BigRegions.group().reduceSum(function (d) {
+        return d["Raised"];
+        });
+
+
+      d3.json("/web/geo/france.geo.json", function (franceJson) {
+        usChart.callbackZoomIn(testCallBackDrill2)
+        .colors(d3.scale.quantize().range(["#ffffb2","#fed976","#feb24c","#fd8d3c","#f03b20","#bd0026"]))
+        .colorDomain([0, 100])
+        .colorCalculator(function (d) { return d ? usChart.colors()(d) : '#ccc'; })
+        .callbackZoomOut(testCallBackRoll1)
+        .dimension(BigRegions)
+        .group(BigstateRaisedSum)
+        .overlayGeoJson(franceJson, "BigRegions", function (d) {
+          return d.id;
+          });
+
+        dc.redrawAll();
+        });
+  });
+}
+
+function testBassin(){
+  d3.csv("/web/geo/vc.bassin.csv", function (csv) {    var data = crossfilter(csv);
+
+      var states = data.dimension(function (d) {
+        return d["State"];
+        });
+      var stateRaisedSum = states.group().reduceSum(function (d) {
+        return d["Raised"];
+        });
+
+      d3.json("/web/geo/bassin.geo.json", function (franceJson) {
+        usChart
+        .colors(d3.scale.quantize().range(["#f7fcfd","#e5f5f9","#ccece6","#99d8c9","#66c2a4","#41ae76","#238b45","#005824"]))
+        .colorDomain([0, 200])
+        .colorCalculator(function (d) { return d ? usChart.colors()(d) : '#ccc'; })
+        .callbackZoomOut(testCallBackRoll2)
+        .dimension(states)
+        .group(stateRaisedSum)
+        .overlayGeoJson(franceJson, "regions", function (d) {
+          return d.id;
+          });
+
+        dc.redrawAll();
+        });
+  });
+}
+</script>
+</body>
+</html>
