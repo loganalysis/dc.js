@@ -318,5 +318,10 @@ dc.barChart = function (parent, chartGroup) {
         _chart.onMouseWheel(d, true, true);
     }
 
+    _chart._zoomIn = function (d) {
+      _chart._onZoomIn(d);
+      _chart.callbackZoomIn()(d.x);
+    };
+
     return _chart.anchor(parent, chartGroup);
 };
