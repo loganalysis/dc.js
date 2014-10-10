@@ -48,7 +48,7 @@ dc.pieChart = function (parent, chartGroup) {
     var _cy;
     var _minAngleForLabel = DEFAULT_MIN_ANGLE_FOR_LABEL;
     var _externalLabelRadius;
-    var _chart = dc.capMixin(dc.colorMixin(dc.baseMixin({})));
+    var _chart = dc.wheelMixin(dc.capMixin(dc.colorMixin(dc.baseMixin({}))));
 
     _chart.colorAccessor(_chart.cappedKeyAccessor);
 
@@ -132,6 +132,12 @@ dc.pieChart = function (parent, chartGroup) {
             .attr('class', function (d, i) {
                 return _sliceCssClass + ' _' + i;
             });
+
+        // Add zoom on slices
+        slicesEnter.on("mousewheel", function (d) { _chart.onMouseWheel(d, true, true); })
+                   .on("DOMMouseScroll", function (d) { _chart.onMouseWheel(d, true, true); })
+                   .on("wheel", function (d) { _chart.onMouseWheel(d, true, true); });
+
         return slicesEnter;
     }
 
@@ -453,5 +459,13 @@ dc.pieChart = function (parent, chartGroup) {
         });
     }
 
+    // Redefinition of zoomIn function, from dc.wheelMixin()
+    _chart._zoomIn = function (d) {
+      _chart._onZoomIn(d);
+      _chart.callbackZoomIn()(d.data.key, _chart.chartID());
+    };
+
     return _chart.anchor(parent, chartGroup);
 };
+
+
