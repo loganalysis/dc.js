@@ -74,12 +74,12 @@ dc.wheelMixin = function(_chart) {
 
     _chart._zoomIn = function (d) {
         _chart._onZoomIn(d);
-        _chart.callbackZoomIn()(_chart.keyAccessor()(d));
+        _chart.callbackZoomIn()(_chart.keyAccessor()(d), _chart.chartID());
     };
 
     _chart._zoomOut = function (d) {
         _chart._onZoomOut();
-        _chart.callbackZoomOut()();
+        _chart.callbackZoomOut()(_chart.chartID());
     };
 
     /**
