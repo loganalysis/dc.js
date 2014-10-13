@@ -343,7 +343,7 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
     }
 
     _chart._zoomIn = function (d) {
-        _chart._onZoomIn(d);
+        _chart._onZoomIn(d.id);
         _chart.callbackZoomIn()(d.id);
     };
 
@@ -351,7 +351,14 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
      * Function called when drilling down on d : focus on d and call drill down of Display
      */
     _chart._onZoomIn = function (d) {
-        _chart._adaptTo(d, 750);
+        var layerData = this.geoJsons()[this.geoJsons().length - 1].data
+        for (var i in layerData) {
+            if (layerData[i].id === d) {
+                var geom = layerData[i];
+                break;
+            }
+        }
+        _chart._adaptTo(geom, 750);
     };
 
     /*
