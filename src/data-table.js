@@ -29,7 +29,7 @@ dc.dataTable = function (parent, chartGroup) {
     var GROUP_CSS_CLASS = 'dc-table-group';
     var HEAD_CSS_CLASS = 'dc-table-head';
 
-    var _chart = dc.baseMixin({});
+    var _chart = dc.wheelMixin(dc.baseMixin({}));
 
     var _size = 25;
     var _columns = [];
@@ -144,7 +144,7 @@ dc.dataTable = function (parent, chartGroup) {
 
     function nestEntries() {
         var entries = _chart.dimension().top(_size);
-
+        
         return d3.nest()
             .key(_chart.group())
             .sortKeys(_order)
@@ -167,7 +167,10 @@ dc.dataTable = function (parent, chartGroup) {
                 if (isSelected(d)) baseClasses += " selected";
                 if (isDeselected(d)) baseClasses += " deselected";
                 return baseClasses;
-            });
+            })
+            .on("mousewheel", function (d) { _chart.onMouseWheel(d, true, true); })
+            .on("DOMMouseScroll", function (d) { _chart.onMouseWheel(d, true, true); })
+            .on("wheel", function (d) { _chart.onMouseWheel(d, true, true); });
 
         _columns.forEach(function (v, i) {
             rowEnter.append('td')
@@ -335,6 +338,12 @@ dc.dataTable = function (parent, chartGroup) {
         }
         _order = _;
         return _chart;
+    };
+
+  // Redefinition of zoomIn function, from dc.wheelMixin()
+    _chart._zoomIn = function (d) {
+      _chart._onZoomIn(d);
+      _chart.callbackZoomIn()(d.key, _chart.chartID());
     };
 
     return _chart.anchor(parent, chartGroup);
