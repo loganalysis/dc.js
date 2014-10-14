@@ -168,6 +168,7 @@ dc.dataTable = function (parent, chartGroup) {
                 if (isDeselected(d)) baseClasses += " deselected";
                 return baseClasses;
             })
+            .on("click", _chart.onClick)
             .on("mousewheel", function (d) { _chart.onMouseWheel(d, true, true); })
             .on("DOMMouseScroll", function (d) { _chart.onMouseWheel(d, true, true); })
             .on("wheel", function (d) { _chart.onMouseWheel(d, true, true); });
