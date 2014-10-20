@@ -106,10 +106,10 @@ dc.bubbleChart = function (parent, chartGroup) {
 
     function updateNodes(bubbleG) {
         dc.transition(bubbleG, _chart.transitionDuration())
-            .attr('transform', bubbleLocator)
-            .selectAll('circle.' + _chart.BUBBLE_CLASS)
-            .attr('fill', _chart.getColor)
-            .attr('r', function (d) {
+            .attr("transform", bubbleLocator)
+            .select("circle." + _chart.BUBBLE_CLASS)
+            .attr("fill", _chart.getColor)
+            .attr("r", function(d) {
                 return _chart.bubbleR(d);
             })
             .attr('opacity', function (d) {
