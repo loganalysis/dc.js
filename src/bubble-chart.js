@@ -35,7 +35,7 @@ var bubbleChart2 = dc.bubbleChart('#chart-container2', 'chartGroupA');
 
 **/
 dc.bubbleChart = function (parent, chartGroup) {
-    var _chart = dc.bubbleMixin(dc.coordinateGridMixin({}));
+    var _chart = dc.wheelMixin(dc.bubbleMixin(dc.coordinateGridMixin({})));
 
     var _elasticRadius = false;
 
@@ -88,6 +88,10 @@ dc.bubbleChart = function (parent, chartGroup) {
                 return _chart.BUBBLE_CLASS + ' _' + i;
             })
             .on('click', _chart.onClick)
+            .on("mousewheel", function (d) { _chart.onMouseWheel(d, true, true); })
+            .on("DOMMouseScroll", function (d) { _chart.onMouseWheel(d, true, true); })
+            .on("wheel", function (d) { _chart.onMouseWheel(d, true, true); })
+
             .attr('fill', _chart.getColor)
             .attr('r', 0);
         dc.transition(bubbleG, _chart.transitionDuration())
@@ -147,6 +151,12 @@ dc.bubbleChart = function (parent, chartGroup) {
     _chart.redrawBrush = function () {
         // override default x axis brush from parent chart
         _chart.fadeDeselectedArea();
+    };
+
+    // Redefinition of zoomIn function, from dc.wheelMixin()
+    _chart._zoomIn = function (d) {
+        _chart._onZoomIn(d);
+        _chart.callbackZoomIn()(d.key, _chart.chartID());
     };
 
     return _chart.anchor(parent, chartGroup);
