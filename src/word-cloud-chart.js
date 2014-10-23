@@ -59,9 +59,9 @@ dc.wordCloudChart = function (parent, chartGroup) {
         min = _chart.group().order(function(d) { return -d; }).top(1)[0].value;
         max = _chart.group().orderNatural()                   .top(1)[0].value;
 
-        _chart.selectAll("div").remove();
+        _chart.selectAll("div .dc-word").remove();
         _chart.root()
-            .selectAll("div")
+            .selectAll("div .dc-word")
             .data(_chart.data())
             .enter()
             .append('div')
