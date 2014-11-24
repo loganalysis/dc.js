@@ -460,9 +460,9 @@ dc.pieChart = function (parent, chartGroup) {
     }
 
     // Redefinition of zoomIn function, from dc.wheelMixin()
-    _chart._zoomIn = function (d) {
+    _chart._zoomIn = function (d, keys) {
       _chart._onZoomIn(d);
-      _chart.callbackZoomIn()(d.data.key, _chart.chartID());
+      _chart.callbackZoomIn()(d.data.key, _chart.chartID(), keys);
     };
 
     return _chart.anchor(parent, chartGroup);

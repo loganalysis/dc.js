@@ -318,9 +318,9 @@ dc.barChart = function (parent, chartGroup) {
         _chart.onMouseWheel(d, true, true);
     }
 
-    _chart._zoomIn = function (d) {
+    _chart._zoomIn = function (d, keys) {
       _chart._onZoomIn(d);
-      _chart.callbackZoomIn()(d.x);
+      _chart.callbackZoomIn()(d.x, _chart.chartID(), keys);
     };
 
     return _chart.anchor(parent, chartGroup);

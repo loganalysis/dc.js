@@ -55,10 +55,17 @@ dc.wheelMixin = function(_chart) {
         if (zoomOut === undefined)
             zoomOut = true;
 
-        // on zoomIn
+        d3.event.preventDefault();
+
+        var keys = {
+            ctrl  : d3.event.ctrlKey,
+            alt   : d3.event.altKey,
+            shift : d3.event.shiftKey
+        }
+
         if (!disabledActions.mousewheel && zoomIn && (d3.event.deltaY < 0 || d3.event.wheelDeltaY > 0) && _chart._callbackZoomIn !== undefined) {
             delayAction('mousewheel', 1500);
-            _chart._zoomIn(d);
+            _chart._zoomIn(d, keys);
         }
 
         // on zoomIn-out
@@ -72,9 +79,9 @@ dc.wheelMixin = function(_chart) {
         return false;
     };
 
-    _chart._zoomIn = function (d) {
+    _chart._zoomIn = function (d, keys) {
         _chart._onZoomIn(d);
-        _chart.callbackZoomIn()(_chart.keyAccessor()(d), _chart.chartID());
+        _chart.callbackZoomIn()(_chart.keyAccessor()(d), _chart.chartID(), keys);
     };
 
     _chart._zoomOut = function (d) {

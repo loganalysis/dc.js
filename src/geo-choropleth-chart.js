@@ -365,9 +365,9 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
         _chart.addTranslate([d3.event.dx, d3.event.dy], 0);
     }
 
-    _chart._zoomIn = function (d) {
+    _chart._zoomIn = function (d, keys) {
         _chart._onZoomIn(d.id);
-        _chart.callbackZoomIn()(d.id);
+        _chart.callbackZoomIn()(d.id, _chart.chartID(), keys);
     };
 
     _chart._zoomOut = function (nbLevels) {
@@ -376,7 +376,7 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
     };
 
     /*
-     * Function called when drilling down on d : focus on d and call drill down of Display
+     * Function called when drilling down on d or on all selected members : focus on d and call drill down of Display
      */
     _chart._onZoomIn = function (d) {
         var layerData = this.geoJsons()[this.geoJsons().length - 1].data
