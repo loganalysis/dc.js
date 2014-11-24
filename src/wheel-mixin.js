@@ -62,7 +62,6 @@ dc.wheelMixin = function(_chart) {
             alt   : d3.event.altKey,
             shift : d3.event.shiftKey
         }
-
         if (!disabledActions.mousewheel && zoomIn && (d3.event.deltaY < 0 || d3.event.wheelDeltaY > 0) && _chart._callbackZoomIn !== undefined) {
             delayAction('mousewheel', 1500);
             _chart._zoomIn(d, keys);
@@ -80,7 +79,7 @@ dc.wheelMixin = function(_chart) {
     };
 
     _chart._zoomIn = function (d, keys) {
-        _chart._onZoomIn(d);
+        _chart._onZoomIn(d, keys);
         _chart.callbackZoomIn()(_chart.keyAccessor()(d), _chart.chartID(), keys);
     };
 

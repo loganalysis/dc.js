@@ -185,7 +185,7 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
                     return _chart.onClick(d, layerIndex);
                 } else {
                     _chart._zoomOut(Math.max(0, _geoJsons.length - 1 - layerIndex));
-                    _chart._zoomIn(d);
+                    _chart._zoomIn(d, {});
                 }
             })
         if (layerIndex == _geoJsons.length - 1 && layerIndex < _nbZoomLevels) {
@@ -366,7 +366,13 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
     }
 
     _chart._zoomIn = function (d, keys) {
-        _chart._onZoomIn(d.id);
+        var elements = [];
+        if(keys.ctrl){
+            elements = _chart.filters();
+        } else {
+            elements.push(d.id);
+        }
+        _chart._onZoomIn(elements);
         _chart.callbackZoomIn()(d.id, _chart.chartID(), keys);
     };
 
@@ -378,22 +384,28 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
     /*
      * Function called when drilling down on d or on all selected members : focus on d and call drill down of Display
      */
-    _chart._onZoomIn = function (d) {
+    _chart._onZoomIn = function (elements) {
+        var geom = [];
         var layerData = this.geoJsons()[this.geoJsons().length - 1].data
         for (var i in layerData) {
-            if (layerData[i].id === d) {
-                var geom = layerData[i];
-                break;
+            for(var j in elements){
+                if (layerData[i].id === elements[j]) {
+                    geom.push(layerData[i]);
+                }
             }
         }
-        _chart._adaptTo(geom, 750);
+        _chart._adaptTo({"type": "GeometryCollection", "geometries": geom}, 750);
     };
 
     /*
      * Called when rolling up from the current level
      */
     _chart._onZoomOut = function () {
-        _chart._adaptTo({ "type": "GeometryCollection", "geometries": geoJson(Math.max(0, _geoJsons.length - 2)).data}, 700);
+        _chart._adaptTo({
+          "type": "GeometryCollection",
+          "geometries": geoJson(Math.max(0, _geoJsons.length - 2)).data
+          }, 700
+        );
     };
 
 
