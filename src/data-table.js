@@ -342,9 +342,15 @@ dc.dataTable = function (parent, chartGroup) {
     };
 
   // Redefinition of zoomIn function, from dc.wheelMixin()
-    _chart._zoomIn = function (d) {
-      _chart._onZoomIn(d);
-      _chart.callbackZoomIn()(d.key, _chart.chartID());
+    _chart._zoomIn = function (d, keys) {
+        var elements = [];
+        if(keys.ctrl){
+            elements = _chart.filters();
+        } else {
+            elements.push(d.key);
+        }
+      _chart._onZoomIn(elements);
+      _chart.callbackZoomIn()(d.key, _chart.chartID(), keys);
     };
 
     return _chart.anchor(parent, chartGroup);

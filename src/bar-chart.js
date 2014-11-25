@@ -319,7 +319,13 @@ dc.barChart = function (parent, chartGroup) {
     }
 
     _chart._zoomIn = function (d, keys) {
-      _chart._onZoomIn(d);
+      var elements = [];
+      if(keys.ctrl){
+          elements = _chart.filters();
+      } else {
+          elements.push(d.x);
+      }
+      _chart._onZoomIn(elements);
       _chart.callbackZoomIn()(d.x, _chart.chartID(), keys);
     };
 

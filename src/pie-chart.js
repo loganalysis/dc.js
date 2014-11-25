@@ -461,7 +461,13 @@ dc.pieChart = function (parent, chartGroup) {
 
     // Redefinition of zoomIn function, from dc.wheelMixin()
     _chart._zoomIn = function (d, keys) {
-      _chart._onZoomIn(d);
+        var elements = [];
+        if(keys.ctrl){
+            elements = _chart.filters();
+        } else {
+            elements.push(d.data.key);
+        }
+      _chart._onZoomIn(elements);
       _chart.callbackZoomIn()(d.data.key, _chart.chartID(), keys);
     };
 
