@@ -184,8 +184,10 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
                 if (layerIndex == _geoJsons.length - 1) {
                     return _chart.onClick(d, layerIndex);
                 } else {
-                    _chart._zoomOut(Math.max(0, _geoJsons.length - 1 - layerIndex));
-                    _chart._zoomIn(d, {});
+                    if (!d3.event.defaultPrevented) {
+                          _chart._zoomOut(Math.max(0, _geoJsons.length - 1 - layerIndex));
+                          _chart._zoomIn(d, {});
+                    }
                 }
             })
         if (layerIndex == _geoJsons.length - 1 && layerIndex < _nbZoomLevels) {
