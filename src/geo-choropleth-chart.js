@@ -456,6 +456,7 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
             .transition()
             .duration(transition)
             .style("stroke-width", 1.5 / scale + "px")
+            .style("stroke", "white")
             .attr("transform", "translate(" + translate + ") scale(" + scale + ") ");
     }
 
