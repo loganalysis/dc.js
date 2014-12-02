@@ -62,13 +62,14 @@ dc.wheelMixin = function(_chart) {
             alt   : d3.event.altKey,
             shift : d3.event.shiftKey
         }
-        if (!disabledActions.mousewheel && zoomIn && (d3.event.deltaY < 0 || d3.event.wheelDeltaY > 0) && _chart._callbackZoomIn !== undefined) {
+
+        // on zoomIn-out
+        if (!disabledActions.mousewheel && zoomIn && (d3.event.deltaY < 0 || d3.event.wheelDeltaY > 0 || d3.event.deltaX < 0 || d3.event.wheelDeltaX > 0) && _chart._callbackZoomIn !== undefined) {
             delayAction('mousewheel', 1500);
             _chart._zoomIn(d, keys);
         }
 
-        // on zoomIn-out
-        else if (!disabledActions.mousewheel && zoomOut && (d3.event.deltaY > 0 || d3.event.wheelDeltaY < 0) && _chart._callbackZoomOut !== undefined) {
+        else if (!disabledActions.mousewheel && zoomOut && (d3.event.deltaY > 0 || d3.event.wheelDeltaY < 0 || d3.event.deltaX > 0 || d3.event.wheelDeltaX < 0) && _chart._callbackZoomOut !== undefined) {
             delayAction('mousewheel', 1500);
             _chart._zoomOut();
         }
