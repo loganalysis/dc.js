@@ -368,13 +368,17 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
     }
 
     _chart._zoomIn = function (d, keys) {
-        var elements = [];
-        if(keys.ctrl){
-            elements = _chart.filters();
-        } else {
-            elements.push(d.id);
-        }
-        _chart._onZoomIn(elements);
+        var toZoom;
+        var layerData = this.geoJsons()[this.geoJsons().length - 1].data;
+
+        if (keys.ctrl)
+            toZoom = _chart.filters().length ? _chart.filters() : layerData.map(function(d) { return d.id; });
+        else if (keys.shift)
+            toZoom = layerData.map(function(d) { return d.id; });
+        else
+            toZoom = [d.id];
+
+        _chart._onZoomIn(toZoom);
         _chart.callbackZoomIn()(d.id, _chart.chartID(), keys);
     };
 
