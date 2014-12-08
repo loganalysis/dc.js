@@ -384,7 +384,7 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
 
     _chart._zoomOut = function (nbLevels) {
         _chart._onZoomOut();
-        _chart.callbackZoomOut()(nbLevels, _chart.chartID());
+        _chart.callbackZoomOut()(_chart.chartID(), nbLevels);
     };
 
     /*
