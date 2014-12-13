@@ -144,14 +144,38 @@ dc.dataTable = function (parent, chartGroup) {
 
     function nestEntries() {
         var entries = _chart.dimension().top(_size);
-        
-        return d3.nest()
+
+        var data = d3.nest()
             .key(_chart.group())
             .sortKeys(_order)
             .entries(entries.sort(function (a, b) {
                 return _order(_sortBy(a), _sortBy(b));
             }));
+
+        if (_chart.dataHideUnfiltered())
+            data = _chart._dataHideUnfiltered(data);
+        if (_chart.dataFilterTop() > 0 && _chart.dataFilterTop() < Infinity)
+            data = _chart._dataFilterTop(data);
+
+        return data;
     }
+
+    _chart._dataHideUnfiltered = function(data) {
+        var filters = _chart.filters();
+        if (!filters.length)
+            return data;
+        else {
+            return data.map(function(layer) {
+                layer.values = layer.values.filter(function(d) { return d.key === undefined || filters.indexOf(d.key) >= 0; });
+                return layer;
+            });
+        }
+    };
+
+    // TODO
+    _chart._dataFilterTop = function(data) {
+        return data;
+    };
 
     function renderRows(groups) {
         var rows = groups.order()

@@ -93,6 +93,14 @@ dc.numberDisplay = function (parent, chartGroup) {
         return _chart.valueAccessor()(valObj);
     });
 
+    _chart._dataHideUnfiltered = function(data) {
+        return data;
+    };
+
+    _chart._dataFilterTop = function(data) {
+        return data;
+    };
+
     _chart.transitionDuration(250); // good default
 
     _chart._doRender = function () {

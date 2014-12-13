@@ -249,6 +249,23 @@ dc.stackMixin = function (_chart) {
         return layers.length ? _chart.stackLayout()(layers) : [];
     });
 
+    _chart._dataHideUnfiltered = function(data) {
+        var filters = _chart.filters();
+        if (!filters.length)
+            return data;
+        else {
+            return data.map(function(layer) {
+                layer.values = layer.values.filter(function(d) { return d.data.key === undefined || filters.indexOf(d.data.key) >= 0; });
+                return layer;
+            });
+        }
+    };
+
+    // TODO
+    _chart._dataFilterTop = function(data) {
+        return data;
+    };
+
     _chart._ordinalXDomain = function () {
         return flattenStack().map(dc.pluck('x'));
     };

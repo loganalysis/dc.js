@@ -56,6 +56,11 @@ dc.capMixin = function (_chart) {
         }
     });
 
+    // Disabled for cap mixin
+    _chart._dataFilterTop = function(data) {
+        return data;
+    };
+
     /**
     #### .cap([count])
     Get or set the count of elements to that will be included in the cap.

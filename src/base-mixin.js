@@ -189,10 +189,72 @@ dc.baseMixin = function (_chart) {
     **/
     _chart.data = function (d) {
         if (!arguments.length) {
-            return _data.call(_chart, _group);
+            var data = _data.call(_chart, _group);
+            if (_chart.dataHideUnfiltered())
+                data = _chart._dataHideUnfiltered(data);
+            if (_chart.dataFilterTop() > 0 && _chart.dataFilterTop() < Infinity)
+                data = _chart._dataFilterTop(data);
+            return data;
         }
         _data = d3.functor(d);
         _chart.expireCache();
+        return _chart;
+    };
+
+    _chart._dataHideUnfiltered = function(data) {
+        if (_filters.length)
+            return data.filter(function(d) { return d.key === undefined || _filters.indexOf(d.key) >= 0; });
+        else
+            return data;
+    };
+
+    _chart._dataFilterTop = function(data) {
+        try {
+            var dataTemp = data.slice(0).sort(function(a, b) { return _dataFilterTopAccessor(b) - _dataFilterTopAccessor(a); });
+            return dataTemp.slice(0, _dataFilterTop);
+        }
+        catch (e) {
+            return data;
+        }
+    };
+
+    /**
+    #### .dataHideUnfiltered([boolean])
+    Indicates if we want to hide unfiltered elements of the dimension from the chart.
+
+    **Default:** false.
+    **/
+    var _dataHideUnfiltered = false;
+    _chart.dataHideUnfiltered = function (_) {
+        if (!arguments.length) return _dataHideUnfiltered;
+        _dataHideUnfiltered = _;
+        return _chart;
+    };
+
+    /**
+    #### .dataFilterTop([k])
+    Set the number *k* of elements we will show on the chart. It looks like the cap mixin but other
+    elements are not aggregated in an "Others" group, they are hidden.
+
+    **Default:** Infinity.
+    **/
+    var _dataFilterTop = Infinity;
+    _chart.dataFilterTop = function (k) {
+        if (!arguments.length) return _dataFilterTop;
+        _dataFilterTop = k;
+        return _chart;
+    };
+
+    /**
+    #### ._dataFilterTopAccessor([function])
+    Function to access the value used for the `.dataFilterTop` function.
+
+    **Default:** `function(d) { return _chart.valueAccessor()(d); };`
+    **/
+    var _dataFilterTopAccessor = function(d) { return _chart.valueAccessor()(d); };
+    _chart.dataFilterTopAccessor = function (_) {
+        if (!arguments.length) return _dataFilterTopAccessor;
+        _dataFilterTopAccessor = _;
         return _chart;
     };
 
