@@ -170,7 +170,7 @@ dc.pieChart = function (parent, chartGroup) {
             .attr('text-anchor', 'middle')
             .text(function (d) {
                 var data = d.data;
-                if (sliceHasNoData(data) || sliceTooSmall(d)) {
+                if ((sliceHasNoData(data) || sliceTooSmall(d)) && !isSelectedSlice(d)) {
                     return '';
                 }
                 return _chart.label()(d.data);
@@ -273,7 +273,8 @@ dc.pieChart = function (parent, chartGroup) {
 
     /**
     #### .radius([radius])
-    Get or set the outer radius. Default radius is 90px.
+    Get or set the outer radius. If the radius is not set, it will be half of the minimum of the
+    chart width and height.
 
     **/
     _chart.radius = function (r) {

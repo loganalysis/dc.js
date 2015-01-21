@@ -10,9 +10,15 @@ describe('dc.geoChoropleth', function() {
         districtDimension = data.dimension(function(d){return d.district;});
         districtValueEnrollGroup = districtDimension.group().reduceSum(function(d){return d.value;});
 
-        geoJson = loadGeoFixture();
-        geoJson2 = loadGeoFixture2();
-        geoJson3 = loadGeoFixture3();
+        if ( !geoJson ) {
+            geoJson = loadGeoFixture();
+        }
+        if ( !geoJson2 ) {
+            geoJson2 = loadGeoFixture2();
+        }
+        if ( !geoJson3 ) {
+            geoJson3 = loadGeoFixture3();
+        }
     });
 
     function buildChart(id) {
@@ -24,8 +30,6 @@ describe('dc.geoChoropleth', function() {
             .group(stateValueSumGroup)
             .width(990)
             .height(600)
-            .dimension(stateDimension)
-            .group(stateValueSumGroup)
             .colors(["#ccc", "#E2F2FF", "#C4E4FF", "#9ED2FF", "#81C5FF", "#6BBAFF", "#51AEFF", "#36A2FF", "#1E96FF", "#0089FF"])
             .colorDomain([0, 155])
             .overlayGeoJson(geoJson.features, "state", function(d) {

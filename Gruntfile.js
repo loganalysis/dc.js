@@ -124,6 +124,20 @@ module.exports = function (grunt) {
                         ]
                     }
                 }
+            },
+            browserify: {
+                options: {
+                    display: 'short',
+                    summary: true,
+                    specs:  'spec/*-spec.js',
+                    helpers: 'spec/helpers/*.js',
+                    version: '2.0.0',
+                    outfile: 'spec/index-browserify.html',
+                    keepRunner: true
+                },
+                src: [
+                    'bundle.js'
+                ]
             }
         },
         'saucelabs-jasmine': {
@@ -281,6 +295,17 @@ module.exports = function (grunt) {
                 command: 'cp -n scripts/pre-commit.sh .git/hooks/pre-commit' +
                     ' || echo \'Cowardly refusing to overwrite your existing git pre-commit hook.\''
             }
+        },
+        browserify: {
+            dev: {
+                src: 'dc.js',
+                dest: 'bundle.js',
+                options: {
+                    browserifyOptions: {
+                        standalone: 'dc'
+                    }
+                }
+            },
         }
     });
 
@@ -301,6 +326,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-shell');
     grunt.loadNpmTasks('grunt-debug-task');
     grunt.loadNpmTasks('grunt-fileindex');
+    grunt.loadNpmTasks('grunt-browserify');
 
     // custom tasks
     grunt.registerMultiTask('emu', 'Documentation extraction by emu.', function () {
@@ -353,9 +379,10 @@ module.exports = function (grunt) {
     grunt.registerTask('build', ['concat', 'uglify', 'sed']);
     grunt.registerTask('docs', ['build', 'copy', 'emu', 'toc', 'markdown', 'docco']);
     grunt.registerTask('web', ['docs', 'gh-pages']);
-    grunt.registerTask('server', ['docs', 'jasmine:specs:build', 'connect:server', 'watch:jasmine']);
-    grunt.registerTask('test', ['docs', 'jasmine:specs', 'test-stock-example', 'shell:hooks']);
-    grunt.registerTask('coverage', ['docs', 'jasmine:coverage']);
+    grunt.registerTask('server', ['docs', 'fileindex', 'jasmine:specs:build', 'connect:server', 'watch:jasmine']);
+    grunt.registerTask('test', ['build', 'jasmine:specs', 'test-stock-example', 'shell:hooks']);
+    grunt.registerTask('test-browserify', ['build', 'browserify', 'jasmine:browserify']);
+    grunt.registerTask('coverage', ['build', 'jasmine:coverage']);
     grunt.registerTask('ci', ['test', 'jasmine:specs:build', 'connect:server', 'saucelabs-jasmine']);
     grunt.registerTask('ci-pull', ['test', 'jasmine:specs:build', 'connect:server']);
     grunt.registerTask('lint', ['build', 'jshint', 'jscs']);

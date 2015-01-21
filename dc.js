@@ -1,5 +1,5 @@
 /*!
- *  dc 2.0.0-alpha.2
+ *  dc 2.0.0-beta.4
  *  http://dc-js.github.io/dc.js/
  *  Copyright 2012 Nick Zhu and other contributors
  *
@@ -16,11 +16,11 @@
  *  limitations under the License.
  */
 
-(function() { function _dc(d3) {
+(function() { function _dc(d3, crossfilter) {
 'use strict';
 
 /**
-#### Version 2.0.0-alpha.2
+#### Version 2.0.0-beta.4
 The entire dc.js library is scoped under the **dc** name space. It does not introduce anything else
 into the global name space.
 #### Function Chaining
@@ -41,7 +41,7 @@ that are chainable d3 objects.)
 /*jshint -W062*/
 /*jshint -W079*/
 var dc = {
-    version: '2.0.0-alpha.2',
+    version: '2.0.0-beta.4',
     constants: {
         CHART_CLASS: 'dc-chart',
         DEBUG_GROUP_CLASS: 'debug',
@@ -463,10 +463,11 @@ dc.utils.nameToId = function (name) {
     return name.toLowerCase().replace(/[\s]/g, '_').replace(/[\.']/g, '');
 };
 
-dc.utils.appendOrSelect = function (parent, name) {
-    var element = parent.select(name);
+dc.utils.appendOrSelect = function (parent, selector, tag) {
+    tag = tag || selector;
+    var element = parent.select(selector);
     if (element.empty()) {
-        element = parent.append(name);
+        element = parent.append(tag);
     }
     return element;
 };
@@ -501,6 +502,18 @@ dc.logger.debug = function (msg) {
     return dc.logger;
 };
 
+dc.logger.deprecate = function (fn, msg) {
+    // Allow logging of deprecation
+    var warned = false;
+    function deprecated() {
+        if (!warned) {
+            dc.logger.warn(msg);
+            warned = true;
+        }
+        return fn.apply(this, arguments);
+    }
+    return deprecated;
+};
 dc.events = {
     current: null
 };
@@ -682,7 +695,6 @@ dc.baseMixin = function (_chart) {
 
     var _filterPrinter = dc.printers.filters;
 
-    var _renderlets = [];
     var _mandatoryAttributes = ['dimension', 'group'];
 
     var _chartGroup = dc.constants.DEFAULT_CHART_GROUP;
@@ -693,7 +705,8 @@ dc.baseMixin = function (_chart) {
         'preRedraw',
         'postRedraw',
         'filtered',
-        'zoomed');
+        'zoomed',
+        'renderlet');
 
     var _legend;
 
@@ -958,7 +971,7 @@ dc.baseMixin = function (_chart) {
         if (a && a.replace) {
             return a.replace('#', '');
         }
-        return '' + _chart.chartID();
+        return 'dc-chart' + _chart.chartID();
     };
 
     /**
@@ -1112,13 +1125,13 @@ dc.baseMixin = function (_chart) {
         if (_chart.transitionDuration() > 0 && _svg) {
             _svg.transition().duration(_chart.transitionDuration())
                 .each('end', function () {
-                    runAllRenderlets();
+                    _listeners['renderlet'](_chart);
                     if (event) {
                         _listeners[event](_chart);
                     }
                 });
         } else {
-            runAllRenderlets();
+            _listeners['renderlet'](_chart);
             if (event) {
                 _listeners[event](_chart);
             }
@@ -1177,9 +1190,10 @@ dc.baseMixin = function (_chart) {
     };
 
     /**
-    Set or get the has filter handler. The has filter handler is a function that performs the logical check if the
-    current chart's filters have a specific filter.  Using a custom has filter handler allows you to perform additional
-    logic upon checking if a filter exists.
+    #### .hasFilterHandler([function])
+    Set or get the has filter handler. The has filter handler is a function that checks to see if
+    the chart's current filters include a specific filter.  Using a custom has filter handler allows
+    you to change the way filters are checked for and replaced.
 
     ```js
     // default has filter handler
@@ -1193,7 +1207,7 @@ dc.baseMixin = function (_chart) {
     }
 
     // custom filter handler (no-op)
-    chart.hasFilterHandler(function(filter) {
+    chart.hasFilterHandler(function(filters, filter) {
         return false;
     });
     ```
@@ -1227,9 +1241,13 @@ dc.baseMixin = function (_chart) {
     };
 
     /**
-    Set or get the remove filter handler. The remove filter handler is a function that performs the removal of a filter
-    from the chart's current filters. Using a custom remove filter handler allows you to perform additional logic
-    upon removing a filter.  Any changes should modify the `filters` argument reference and return that reference.
+    #### .removeFilterHandler([function])
+    Set or get the remove filter handler. The remove filter handler is a function that removes a
+    filter from the chart's current filters. Using a custom remove filter handler allows you to
+    change how filters are removed or perform additional work when removing a filter, e.g. when
+    using a filter server other than crossfilter.
+
+    Any changes should modify the `filters` array argument and return that array.
 
     ```js
     // default remove filter handler
@@ -1263,9 +1281,13 @@ dc.baseMixin = function (_chart) {
     };
 
     /**
-    Set or get the add filter handler. The add filter handler is a function that performs the addition of a filter
-    to the charts filter list. Using a custom add filter handler allows you to perform additional logic
-    upon adding a filter.  Any changes should modify the `filters` argument reference and return that reference.
+    #### .addFilterHandler([function])
+    Set or get the add filter handler. The add filter handler is a function that adds a filter to
+    the chart's filter list. Using a custom add filter handler allows you to change the way filters
+    are added or perform additional work when adding a filter, e.g. when using a filter server other
+    than crossfilter.
+
+    Any changes should modify the `filters` array argument and return that array.
 
     ```js
     // default add filter handler
@@ -1288,14 +1310,18 @@ dc.baseMixin = function (_chart) {
         return _chart;
     };
 
-    var _resetFilterHandler = function () {
+    var _resetFilterHandler = function (filters) {
         return [];
     };
 
     /**
-    Set or get the reset filter handler. The reset filter handler is a function that performs the reset of the filters
-    list by returning the new list. Using a custom reset filter handler allows you to perform additional logic
-    upon reseting the filters.  This function should return an array.
+    #### .resetFilterHandler([function])
+    Set or get the reset filter handler. The reset filter handler is a function that resets the
+    chart's filter list by returning a new list. Using a custom reset filter handler allows you to
+    change the way filters are reset, or perform additional work when resetting the filters,
+    e.g. when using a filter server other than crossfilter.
+
+    This function should return an array.
 
     ```js
     // default remove filter handler
@@ -1304,7 +1330,7 @@ dc.baseMixin = function (_chart) {
     }
 
     // custom filter handler (no-op)
-    chart.addFilterHandler(function(filters) {
+    chart.resetFilterHandler(function(filters) {
         return filters;
     });
     ```
@@ -1603,6 +1629,9 @@ dc.baseMixin = function (_chart) {
     right after the chart finishes its own drawing routine, giving you a way to modify the svg
     elements. Renderlet functions take the chart instance as the only input parameter and you can
     use the dc API or use raw d3 to achieve pretty much any effect.
+
+    @Deprecated - Use [Listeners](#Listeners) with a 'renderlet' prefix
+    Generates a random key for the renderlet, which makes it hard for removal.
     ```js
     // renderlet function
     chart.renderlet(function(chart){
@@ -1614,16 +1643,10 @@ dc.baseMixin = function (_chart) {
     ```
 
     **/
-    _chart.renderlet = function (_) {
-        _renderlets.push(_);
+    _chart.renderlet = dc.logger.deprecate(function (_) {
+        _chart.on('renderlet.' + dc.utils.uniqueId(), _);
         return _chart;
-    };
-
-    function runAllRenderlets() {
-        for (var i = 0; i < _renderlets.length; ++i) {
-            _renderlets[i](_chart);
-        }
-    }
+    }, 'chart.renderlet has been deprecated.  Please use chart.on("renderlet.<renderletKey>", renderletFunction)');
 
     /**
     #### .chartGroup([group])
@@ -1703,6 +1726,10 @@ dc.baseMixin = function (_chart) {
     /**
     ## Listeners
     All dc chart instance supports the following listeners.
+
+    #### .on('renderlet', function(chart, filter){...})
+    This listener function will be invoked after transitions after redraw and render. Replaces the
+    deprecated `.renderlet()` method.
 
     #### .on('preRender', function(chart){...})
     This listener function will be invoked before chart rendering.
@@ -1888,6 +1915,7 @@ dc.colorMixin = function (_chart) {
         var newDomain = [d3.min(_chart.data(), _chart.colorAccessor()),
                          d3.max(_chart.data(), _chart.colorAccessor())];
         _colors.domain(newDomain);
+        return _chart;
     };
 
     /**
@@ -2363,7 +2391,8 @@ dc.coordinateGridMixin = function (_chart) {
                     .attr('transform', 'translate(' + _chart.margins().left + ',' + _chart.margins().top + ')');
             }
 
-            var ticks = _xAxis.tickValues() ? _xAxis.tickValues() : _x.ticks(_xAxis.ticks()[0]);
+            var ticks = _xAxis.tickValues() ? _xAxis.tickValues() :
+                    (typeof _x.ticks === 'function' ? _x.ticks(_xAxis.ticks()[0]) : _x.domain());
 
             var lines = gridLineG.selectAll('line')
                 .data(ticks);
@@ -2853,7 +2882,7 @@ dc.coordinateGridMixin = function (_chart) {
     };
 
     function getClipPathId() {
-        return _chart.anchorName() + '-clip';
+        return _chart.anchorName().replace(/[ .#]/g, '-') + '-clip';
     }
 
     /**
@@ -2873,8 +2902,10 @@ dc.coordinateGridMixin = function (_chart) {
 
     function generateClipPath() {
         var defs = dc.utils.appendOrSelect(_parent, 'defs');
-
-        var chartBodyClip = dc.utils.appendOrSelect(defs, 'clipPath').attr('id', getClipPathId());
+        // cannot select <clippath> elements; bug in WebKit, must select by id
+        // https://groups.google.com/forum/#!topic/d3-js/6EpAzQ2gU9I
+        var id = getClipPathId();
+        var chartBodyClip = dc.utils.appendOrSelect(defs, '#' + id, 'clipPath').attr('id', id);
 
         var padding = _clipPadding * 2;
 
@@ -2905,6 +2936,7 @@ dc.coordinateGridMixin = function (_chart) {
         _chart._preprocessData();
 
         drawChart(false);
+        generateClipPath();
 
         return _chart;
     };
@@ -2947,7 +2979,8 @@ dc.coordinateGridMixin = function (_chart) {
         _hasBeenMouseZoomable = true;
         _zoom.x(_chart.x())
             .scaleExtent(_zoomScale)
-            .size([_chart.width(), _chart.height()]);
+            .size([_chart.width(), _chart.height()])
+            .duration(_chart.transitionDuration());
         _chart.root().call(_zoom);
     };
 
@@ -3826,7 +3859,7 @@ dc.pieChart = function (parent, chartGroup) {
             .attr('text-anchor', 'middle')
             .text(function (d) {
                 var data = d.data;
-                if (sliceHasNoData(data) || sliceTooSmall(d)) {
+                if ((sliceHasNoData(data) || sliceTooSmall(d)) && !isSelectedSlice(d)) {
                     return '';
                 }
                 return _chart.label()(d.data);
@@ -3929,7 +3962,8 @@ dc.pieChart = function (parent, chartGroup) {
 
     /**
     #### .radius([radius])
-    Get or set the outer radius. Default radius is 90px.
+    Get or set the outer radius. If the radius is not set, it will be half of the minimum of the
+    chart width and height.
 
     **/
     _chart.radius = function (r) {
@@ -4211,6 +4245,7 @@ dc.barChart = function (parent, chartGroup) {
             .append('rect')
             .attr('class', 'bar')
             .attr('fill', dc.pluck('data', _chart.getColor))
+            .attr('y', _chart.yAxisHeight())
             .attr('height', 0);
 
         if (_chart.renderTitle()) {
@@ -4218,7 +4253,7 @@ dc.barChart = function (parent, chartGroup) {
         }
 
         if (_chart.isOrdinal()) {
-            bars.on('click', onClick);
+            bars.on('click', _chart.onClick);
         }
 
         dc.transition(bars, _chart.transitionDuration())
@@ -4315,9 +4350,9 @@ dc.barChart = function (parent, chartGroup) {
         return _chart;
     };
 
-    function onClick(d) {
-        _chart.onClick(d.data);
-    }
+    dc.override(_chart, 'onClick', function (d) {
+        _chart._onClick(d.data);
+    });
 
     /**
     #### .barPadding([padding])
@@ -4694,7 +4729,6 @@ dc.lineChart = function (parent, chartGroup) {
                     .append('circle')
                     .attr('class', DOT_CIRCLE_CLASS)
                     .attr('r', getDotRadius())
-                    .attr('fill', _chart.getColor)
                     .style('fill-opacity', _dataPointFillOpacity)
                     .style('stroke-opacity', _dataPointStrokeOpacity)
                     .on('mousemove', function () {
@@ -4706,8 +4740,7 @@ dc.lineChart = function (parent, chartGroup) {
                         var dot = d3.select(this);
                         hideDot(dot);
                         hideRefLines(g);
-                    })
-                    .call(renderTitle, d);
+                    });
 
                 dots
                     .attr('cx', function (d) {
@@ -4716,7 +4749,8 @@ dc.lineChart = function (parent, chartGroup) {
                     .attr('cy', function (d) {
                         return dc.utils.safeNumber(_chart.y()(d.y + d.y0));
                     })
-                    .attr('fill', _chart.getColor);
+                    .attr('fill', _chart.getColor)
+                    .call(renderTitle, d);
 
                 dots.exit().remove();
             });
@@ -4767,6 +4801,7 @@ dc.lineChart = function (parent, chartGroup) {
 
     function renderTitle(dot, d) {
         if (_chart.renderTitle()) {
+            dot.selectAll('title').remove();
             dot.append('title').text(dc.pluck('data', _chart.title(d.name)));
         }
     }
@@ -4931,6 +4966,22 @@ dc.dataCount = function (parent, chartGroup) {
         if (s.some) {
             _html.some = s.some;
         }
+        return _chart;
+    };
+
+    /**
+    #### formatNumber([formatter])
+    Gets or sets an optional function to format the filter count and total count.
+
+    ```js
+    counter.formatNumber(d3.format('.2g'))
+    ```
+    **/
+    _chart.formatNumber = function (s) {
+        if (!arguments.length) {
+            return _formatNumber;
+        }
+        _formatNumber = s;
         return _chart;
     };
 
@@ -5103,7 +5154,12 @@ dc.dataTable = function (parent, chartGroup) {
     }
 
     function nestEntries() {
-        var entries = _chart.dimension().top(_size);
+        var entries;
+        if (_order === d3.ascending) {
+            entries = _chart.dimension().bottom(_size);
+        } else {
+            entries = _chart.dimension().top(_size);
+        }
 
         return d3.nest()
             .key(_chart.group())
@@ -6761,6 +6817,8 @@ dc.rowChart = function (parent, chartGroup) {
 
     var _labelOffsetX = 10;
     var _labelOffsetY = 15;
+    var _hasLabelOffsetY = false;
+    var _dyOffset = '0.35em';  // this helps center labels https://github.com/mbostock/d3/wiki/SVG-Shapes#svg_text
     var _titleLabelOffsetX = 2;
 
     var _gap = 5;
@@ -6888,7 +6946,7 @@ dc.rowChart = function (parent, chartGroup) {
 
     function rootValue() {
         var root = _x(0);
-        return root === -Infinity ? _x(1) : root;
+        return (root === -Infinity || root !== root) ? _x(1) : root;
     }
 
     function updateElements(rows) {
@@ -6899,6 +6957,11 @@ dc.rowChart = function (parent, chartGroup) {
             height = (_chart.effectiveHeight() - (n + 1) * _gap) / n;
         } else {
             height = _fixedBarHeight;
+        }
+
+        // vertically align label in center unless they override the value via property setter
+        if (!_hasLabelOffsetY) {
+            _labelOffsetY = height / 2;
         }
 
         var rect = rows.attr('transform', function (d, i) {
@@ -6948,6 +7011,7 @@ dc.rowChart = function (parent, chartGroup) {
             var lab = rows.select('text')
                 .attr('x', _labelOffsetX)
                 .attr('y', _labelOffsetY)
+                .attr('dy', _dyOffset)
                 .on('click', onClick)
                 .attr('class', function (d, i) {
                     return _rowCssClass + ' _' + i;
@@ -7090,6 +7154,7 @@ dc.rowChart = function (parent, chartGroup) {
             return _labelOffsetY;
         }
         _labelOffsetY = o;
+        _hasLabelOffsetY = true;
         return _chart;
     };
 
@@ -7139,7 +7204,8 @@ dc.legend = function () {
         _gap = 5,
         _horizontal = false,
         _legendWidth = 560,
-        _itemWidth = 70;
+        _itemWidth = 70,
+        _autoItemWidth = false;
 
     var _g;
 
@@ -7208,11 +7274,13 @@ dc.legend = function () {
         itemEnter.attr('transform', function (d, i) {
             if (_horizontal) {
                 var translateBy = 'translate(' + _cumulativeLegendTextWidth + ',' + row * legendItemHeight() + ')';
-                if ((_cumulativeLegendTextWidth + _itemWidth) >= _legendWidth) {
+                var itemWidth   = _autoItemWidth === true ? this.getBBox().width + _gap : _itemWidth;
+
+                if ((_cumulativeLegendTextWidth + itemWidth) >= _legendWidth) {
                     ++row ;
                     _cumulativeLegendTextWidth = 0 ;
                 } else {
-                    _cumulativeLegendTextWidth += _itemWidth;
+                    _cumulativeLegendTextWidth += itemWidth;
                 }
                 return translateBy;
             }
@@ -7307,6 +7375,19 @@ dc.legend = function () {
             return _itemWidth;
         }
         _itemWidth = _;
+        return _legend;
+    };
+
+    /**
+    #### .autoItemWidth([value])
+    Turn automatic width for legend items on or off. If true, itemWidth() is ignored.
+    This setting takes into account gap(). Default: false.
+    **/
+    _legend.autoItemWidth = function (_) {
+        if (!arguments.length) {
+            return _autoItemWidth;
+        }
+        _autoItemWidth = _;
         return _legend;
     };
 
@@ -7758,6 +7839,47 @@ dc.heatMap = function (parent, chartGroup) {
     _chart._mandatoryAttributes(['group']);
     _chart.title(_chart.colorAccessor());
 
+    var _colsLabel = function (d) {
+        return d;
+    };
+    var _rowsLabel = function (d) {
+        return d;
+    };
+
+   /**
+    #### .colsLabel([labelFunction])
+    Set or get the column label function. The chart class uses this function to render
+    column labels on the X axis. It is passed the column name.
+    ```js
+    // the default label function just returns the name
+    chart.colsLabel(function(d) { return d; });
+    ```
+    **/
+    _chart.colsLabel = function (_) {
+        if (!arguments.length) {
+            return _colsLabel;
+        }
+        _colsLabel = _;
+        return _chart;
+    };
+
+   /**
+    #### .rowsLabel([labelFunction])
+    Set or get the row label function. The chart class uses this function to render
+    row labels on the Y axis. It is passed the row name.
+    ```js
+    // the default label function just returns the name
+    chart.rowsLabel(function(d) { return d; });
+    ```
+    **/
+    _chart.rowsLabel = function (_) {
+        if (!arguments.length) {
+            return _rowsLabel;
+        }
+        _rowsLabel = _;
+        return _chart;
+    };
+
     var _xAxisOnClick = function (d) { filterAxis(0, d); };
     var _yAxisOnClick = function (d) { filterAxis(1, d); };
     var _boxOnClick = function (d) {
@@ -7900,9 +8022,9 @@ dc.heatMap = function (parent, chartGroup) {
               .attr('y', _chart.effectiveHeight())
               .attr('dy', 12)
               .on('click', _chart.xAxisOnClick())
-              .text(function (d) { return d; });
+              .text(_chart.colsLabel());
         dc.transition(gColsText, _chart.transitionDuration())
-               .text(function (d) { return d; })
+               .text(_chart.colsLabel())
                .attr('x', function (d) { return cols(d) + boxWidth / 2; });
         gColsText.exit().remove();
         var gRows = _chartBody.selectAll('g.rows');
@@ -7916,9 +8038,9 @@ dc.heatMap = function (parent, chartGroup) {
               .attr('x', 0)
               .attr('dx', -2)
               .on('click', _chart.yAxisOnClick())
-              .text(function (d) { return d; });
+              .text(_chart.rowsLabel());
         dc.transition(gRowsText, _chart.transitionDuration())
-              .text(function (d) { return d; })
+              .text(_chart.rowsLabel())
               .attr('y', function (d) { return rows(d) + boxHeight / 2; });
         gRowsText.exit().remove();
 
@@ -8567,13 +8689,28 @@ dc.coordinateGridChart = dc.coordinateGridMixin;
 dc.marginable = dc.marginMixin;
 dc.stackableChart = dc.stackMixin;
 
+// Expose d3 and crossfilter, so that clients in browserify
+// case can obtain them if they need them.
+dc.d3 = d3;
+dc.crossfilter = crossfilter;
+
 return dc;}
     if(typeof define === "function" && define.amd) {
-        define(["d3"], _dc);
+        define(["d3", "crossfilter"], _dc);
     } else if(typeof module === "object" && module.exports) {
-        module.exports = _dc(d3);
+        var _d3 = require('d3');
+        var _crossfilter = require('crossfilter');
+        // When using npm + browserify, 'crossfilter' is a function,
+        // since package.json specifies index.js as main function, and it
+        // does special handling. When using bower + browserify,
+        // there's no main in bower.json (in fact, there's no bower.json),
+        // so we need to fix it.
+        if (typeof _crossfilter !== "function") {
+            _crossfilter = _crossfilter.crossfilter;
+        }
+        module.exports = _dc(_d3, _crossfilter);
     } else {
-        this.dc = _dc(d3);
+        this.dc = _dc(d3, crossfilter);
     }
 }
 )();

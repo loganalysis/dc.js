@@ -91,6 +91,7 @@ dc.barChart = function (parent, chartGroup) {
             .append('rect')
             .attr('class', 'bar')
             .attr('fill', dc.pluck('data', _chart.getColor))
+            .attr('y', _chart.yAxisHeight())
             .attr('height', 0);
 
         if (_chart.renderTitle()) {
@@ -103,7 +104,7 @@ dc.barChart = function (parent, chartGroup) {
                 .on("wheel", onMouseWheelDrillDownRollUp); // newer versions of Firefox
 
         if (_chart.isOrdinal()) {
-            bars.on('click', onClick);
+            bars.on('click', _chart.onClick);
         }
 
         dc.transition(bars, _chart.transitionDuration())
@@ -198,9 +199,9 @@ dc.barChart = function (parent, chartGroup) {
         return _chart;
     };
 
-    function onClick(d) {
-        _chart.onClick(d.data);
-    }
+    dc.override(_chart, 'onClick', function (d) {
+        _chart._onClick(d.data);
+    });
 
     /**
     #### .barPadding([padding])
