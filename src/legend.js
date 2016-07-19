@@ -1,17 +1,16 @@
 /**
-## Legend
-Legend is a attachable widget that can be added to other dc charts to render horizontal legend
-labels.
-
-```js
-chart.legend(dc.legend().x(400).y(10).itemHeight(13).gap(5))
-```
-
-Examples:
-* [Nasdaq 100 Index](http://dc-js.github.com/dc.js/)
-* [Canadian City Crime Stats](http://dc-js.github.com/dc.js/crime/index.html)
-
-**/
+ * Legend is a attachable widget that can be added to other dc charts to render horizontal legend
+ * labels.
+ *
+ * Examples:
+ * - {@link http://dc-js.github.com/dc.js/ Nasdaq 100 Index}
+ * - {@link http://dc-js.github.com/dc.js/crime/index.html Canadian City Crime Stats}
+ * @class legend
+ * @memberof dc
+ * @example
+ * chart.legend(dc.legend().x(400).y(10).itemHeight(13).gap(5))
+ * @return {dc.legend}
+ */
 dc.legend = function () {
     var LABEL_GAP = 2;
 
@@ -23,7 +22,9 @@ dc.legend = function () {
         _gap = 5,
         _horizontal = false,
         _legendWidth = 560,
-        _itemWidth = 70;
+        _itemWidth = 70,
+        _autoItemWidth = false,
+        _legendText = dc.pluck('name');
 
     var _g;
 
@@ -81,7 +82,7 @@ dc.legend = function () {
         }
 
         itemEnter.append('text')
-                .text(dc.pluck('name'))
+                .text(_legendText)
                 .attr('x', _itemHeight + LABEL_GAP)
                 .attr('y', function () {
                     return _itemHeight / 2 + (this.clientHeight ? this.clientHeight : 13) / 2 - 2;
@@ -92,28 +93,34 @@ dc.legend = function () {
         itemEnter.attr('transform', function (d, i) {
             if (_horizontal) {
                 var translateBy = 'translate(' + _cumulativeLegendTextWidth + ',' + row * legendItemHeight() + ')';
-                if ((_cumulativeLegendTextWidth + _itemWidth) >= _legendWidth) {
+                var itemWidth   = _autoItemWidth === true ? this.getBBox().width + _gap : _itemWidth;
+
+                if ((_cumulativeLegendTextWidth + itemWidth) >= _legendWidth) {
                     ++row ;
                     _cumulativeLegendTextWidth = 0 ;
                 } else {
-                    _cumulativeLegendTextWidth += _itemWidth;
+                    _cumulativeLegendTextWidth += itemWidth;
                 }
                 return translateBy;
-            }
-            else {
+            } else {
                 return 'translate(0,' + i * legendItemHeight() + ')';
             }
         });
     };
 
-    function legendItemHeight() {
+    function legendItemHeight () {
         return _gap + _itemHeight;
     }
 
     /**
-    #### .x([value])
-    Set or get x coordinate for legend widget. Default: 0.
-    **/
+     * Set or get x coordinate for legend widget.
+     * @method x
+     * @memberof dc.legend
+     * @instance
+     * @param  {Number} [x=0]
+     * @return {Number}
+     * @return {dc.legend}
+     */
     _legend.x = function (x) {
         if (!arguments.length) {
             return _x;
@@ -123,9 +130,14 @@ dc.legend = function () {
     };
 
     /**
-    #### .y([value])
-    Set or get y coordinate for legend widget. Default: 0.
-    **/
+     * Set or get y coordinate for legend widget.
+     * @method y
+     * @memberof dc.legend
+     * @instance
+     * @param  {Number} [y=0]
+     * @return {Number}
+     * @return {dc.legend}
+     */
     _legend.y = function (y) {
         if (!arguments.length) {
             return _y;
@@ -135,9 +147,14 @@ dc.legend = function () {
     };
 
     /**
-    #### .gap([value])
-    Set or get gap between legend items. Default: 5.
-    **/
+     * Set or get gap between legend items.
+     * @method gap
+     * @memberof dc.legend
+     * @instance
+     * @param  {Number} [gap=5]
+     * @return {Number}
+     * @return {dc.legend}
+     */
     _legend.gap = function (gap) {
         if (!arguments.length) {
             return _gap;
@@ -147,50 +164,112 @@ dc.legend = function () {
     };
 
     /**
-    #### .itemHeight([value])
-    Set or get legend item height. Default: 12.
-    **/
-    _legend.itemHeight = function (h) {
+     * Set or get legend item height.
+     * @method itemHeight
+     * @memberof dc.legend
+     * @instance
+     * @param  {Number} [itemHeight=12]
+     * @return {Number}
+     * @return {dc.legend}
+     */
+    _legend.itemHeight = function (itemHeight) {
         if (!arguments.length) {
             return _itemHeight;
         }
-        _itemHeight = h;
+        _itemHeight = itemHeight;
         return _legend;
     };
 
     /**
-    #### .horizontal([boolean])
-    Position legend horizontally instead of vertically
-    **/
-    _legend.horizontal = function (_) {
+     * Position legend horizontally instead of vertically.
+     * @method horizontal
+     * @memberof dc.legend
+     * @instance
+     * @param  {Boolean} [horizontal=false]
+     * @return {Boolean}
+     * @return {dc.legend}
+     */
+    _legend.horizontal = function (horizontal) {
         if (!arguments.length) {
             return _horizontal;
         }
-        _horizontal = _;
+        _horizontal = horizontal;
         return _legend;
     };
 
     /**
-    #### .legendWidth([value])
-    Maximum width for horizontal legend. Default: 560.
-    **/
-    _legend.legendWidth = function (_) {
+     * Maximum width for horizontal legend.
+     * @method legendWidth
+     * @memberof dc.legend
+     * @instance
+     * @param  {Number} [legendWidth=500]
+     * @return {Number}
+     * @return {dc.legend}
+     */
+    _legend.legendWidth = function (legendWidth) {
         if (!arguments.length) {
             return _legendWidth;
         }
-        _legendWidth = _;
+        _legendWidth = legendWidth;
         return _legend;
     };
 
     /**
-    #### .itemWidth([value])
-    legendItem width for horizontal legend. Default: 70.
-    **/
-    _legend.itemWidth = function (_) {
+     * legendItem width for horizontal legend.
+     * @method itemWidth
+     * @memberof dc.legend
+     * @instance
+     * @param  {Number} [itemWidth=70]
+     * @return {Number}
+     * @return {dc.legend}
+     */
+    _legend.itemWidth = function (itemWidth) {
         if (!arguments.length) {
             return _itemWidth;
         }
-        _itemWidth = _;
+        _itemWidth = itemWidth;
+        return _legend;
+    };
+
+    /**
+     * Turn automatic width for legend items on or off. If true, {@link dc.legend#itemWidth itemWidth} is ignored.
+     * This setting takes into account {@link dc.legend#gap gap}.
+     * @method autoItemWidth
+     * @memberof dc.legend
+     * @instance
+     * @param  {Boolean} [autoItemWidth=false]
+     * @return {Boolean}
+     * @return {dc.legend}
+     */
+    _legend.autoItemWidth = function (autoItemWidth) {
+        if (!arguments.length) {
+            return _autoItemWidth;
+        }
+        _autoItemWidth = autoItemWidth;
+        return _legend;
+    };
+
+    /**
+    #### .legendText([legendTextFunction])
+    Set or get the legend text function. The legend widget uses this function to render
+    the legend text on each item. If no function is specified the legend widget will display
+    the names associated with each group.
+
+    Default: dc.pluck('name')
+
+    ```js
+    // create numbered legend items
+    chart.legend(dc.legend().legendText(function(d, i) { return i + '. ' + d.name; }))
+
+    // create legend displaying group counts
+    chart.legend(dc.legend().legendText(function(d) { return d.name + ': ' d.data; }))
+    ```
+    **/
+    _legend.legendText = function (_) {
+        if (!arguments.length) {
+            return _legendText;
+        }
+        _legendText = _;
         return _legend;
     };
 

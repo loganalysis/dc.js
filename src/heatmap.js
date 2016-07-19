@@ -1,32 +1,22 @@
 /**
- ## Heat Map
-
- Includes: [Color Mixin](#color-mixin), [Margin Mixin](#margin-mixin), [Base Mixin](#base-mixin)
-
- A heat map is matrix that represents the values of two dimensions of data using colors.
-
- #### dc.heatMap(parent[, chartGroup])
- Create a heat map instance and attach it to the given parent element.
-
- Parameters:
-* parent : string | node | selection - any valid
- [d3 single selector](https://github.com/mbostock/d3/wiki/Selections#selecting-elements) specifying
- a dom block element such as a div; or a dom element or d3 selection.
-
-* chartGroup : string (optional) - name of the chart group this chart instance should be placed in.
- Interaction with a chart will only trigger events and redraws within the chart's group.
-
- Returns:
- A newly created heat map instance
-
- ```js
- // create a heat map under #chart-container1 element using the default global chart group
- var heatMap1 = dc.heatMap('#chart-container1');
- // create a heat map under #chart-container2 element using chart group A
- var heatMap2 = dc.heatMap('#chart-container2', 'chartGroupA');
- ```
-
- **/
+ * A heat map is matrix that represents the values of two dimensions of data using colors.
+ * @class heatMap
+ * @memberof dc
+ * @mixes dc.colorMixin
+ * @mixes dc.marginMixin
+ * @mixes dc.baseMixin
+ * @example
+ * // create a heat map under #chart-container1 element using the default global chart group
+ * var heatMap1 = dc.heatMap('#chart-container1');
+ * // create a heat map under #chart-container2 element using chart group A
+ * var heatMap2 = dc.heatMap('#chart-container2', 'chartGroupA');
+ * @param {String|node|d3.selection} parent - Any valid
+ * {@link https://github.com/mbostock/d3/wiki/Selections#selecting-elements d3 single selector} specifying
+ * a dom block element such as a div; or a dom element or d3 selection.
+ * @param {String} [chartGroup] - The name of the chart group this chart instance should be placed in.
+ * Interaction with a chart will only trigger events and redraws within the chart's group.
+ * @return {dc.heatMap}
+ */
 dc.heatMap = function (parent, chartGroup) {
 
     var DEFAULT_BORDER_RADIUS = 6.75;
@@ -42,6 +32,55 @@ dc.heatMap = function (parent, chartGroup) {
     _chart._mandatoryAttributes(['group']);
     _chart.title(_chart.colorAccessor());
 
+    var _colsLabel = function (d) {
+        return d;
+    };
+    var _rowsLabel = function (d) {
+        return d;
+    };
+
+    /**
+     * Set or get the column label function. The chart class uses this function to render
+     * column labels on the X axis. It is passed the column name.
+     * @method colsLabel
+     * @memberof dc.heatMap
+     * @instance
+     * @example
+     * // the default label function just returns the name
+     * chart.colsLabel(function(d) { return d; });
+     * @param  {Function} [labelFunction=function(d) { return d; }]
+     * @return {Function}
+     * @return {dc.heatMap}
+     */
+    _chart.colsLabel = function (labelFunction) {
+        if (!arguments.length) {
+            return _colsLabel;
+        }
+        _colsLabel = labelFunction;
+        return _chart;
+    };
+
+    /**
+     * Set or get the row label function. The chart class uses this function to render
+     * row labels on the Y axis. It is passed the row name.
+     * @method rowsLabel
+     * @memberof dc.heatMap
+     * @instance
+     * @example
+     * // the default label function just returns the name
+     * chart.rowsLabel(function(d) { return d; });
+     * @param  {Function} [labelFunction=function(d) { return d; }]
+     * @return {Function}
+     * @return {dc.heatMap}
+     */
+    _chart.rowsLabel = function (labelFunction) {
+        if (!arguments.length) {
+            return _rowsLabel;
+        }
+        _rowsLabel = labelFunction;
+        return _chart;
+    };
+
     var _xAxisOnClick = function (d) { filterAxis(0, d); };
     var _yAxisOnClick = function (d) { filterAxis(1, d); };
     var _boxOnClick = function (d) {
@@ -52,7 +91,7 @@ dc.heatMap = function (parent, chartGroup) {
         });
     };
 
-    function filterAxis(axis, value) {
+    function filterAxis (axis, value) {
         var cellsOnAxis = _chart.selectAll('.box-group').filter(function (d) {
             return d.key[axis] === value;
         });
@@ -81,20 +120,24 @@ dc.heatMap = function (parent, chartGroup) {
         return _chart._filter(dc.filters.TwoDimensionalFilter(filter));
     });
 
-    function uniq(d, i, a) {
+    function uniq (d, i, a) {
         return !i || a[i - 1] !== d;
     }
 
     /**
-     #### .rows([values])
-     Gets or sets the values used to create the rows of the heatmap, as an array. By default, all
-     the values will be fetched from the data using the value accessor, and they will be sorted in
-     ascending order.
-     **/
-
-    _chart.rows = function (_) {
+     * Gets or sets the values used to create the rows of the heatmap, as an array. By default, all
+     * the values will be fetched from the data using the value accessor, and they will be sorted in
+     * ascending order.
+     * @method rows
+     * @memberof dc.heatMap
+     * @instance
+     * @param  {Array<String|Number>} [rows]
+     * @return {Array<String|Number>}
+     * @return {dc.heatMap}
+     */
+    _chart.rows = function (rows) {
         if (arguments.length) {
-            _rows = _;
+            _rows = rows;
             return _chart;
         }
         if (_rows) {
@@ -106,14 +149,19 @@ dc.heatMap = function (parent, chartGroup) {
     };
 
     /**
-     #### .cols([keys])
-     Gets or sets the keys used to create the columns of the heatmap, as an array. By default, all
-     the values will be fetched from the data using the key accessor, and they will be sorted in
-     ascending order.
-     **/
-    _chart.cols = function (_) {
+     * Gets or sets the keys used to create the columns of the heatmap, as an array. By default, all
+     * the values will be fetched from the data using the key accessor, and they will be sorted in
+     * ascending order.
+     * @method cols
+     * @memberof dc.heatMap
+     * @instance
+     * @param  {Array<String|Number>} [cols]
+     * @return {Array<String|Number>}
+     * @return {dc.heatMap}
+     */
+    _chart.cols = function (cols) {
         if (arguments.length) {
-            _cols = _;
+            _cols = cols;
             return _chart;
         }
         if (_cols) {
@@ -158,8 +206,8 @@ dc.heatMap = function (parent, chartGroup) {
             .on('click', _chart.boxOnClick());
 
         if (_chart.renderTitle()) {
-            gEnter.append('title')
-                .text(_chart.title());
+            gEnter.append('title');
+            boxes.selectAll('title').text(_chart.title());
         }
 
         dc.transition(boxes.selectAll('rect'), _chart.transitionDuration())
@@ -184,10 +232,11 @@ dc.heatMap = function (parent, chartGroup) {
               .attr('y', _chart.effectiveHeight())
               .attr('dy', 12)
               .on('click', _chart.xAxisOnClick())
-              .text(function (d) { return d; });
+              .text(_chart.colsLabel());
         dc.transition(gColsText, _chart.transitionDuration())
-               .text(function (d) { return d; })
-               .attr('x', function (d) { return cols(d) + boxWidth / 2; });
+               .text(_chart.colsLabel())
+               .attr('x', function (d) { return cols(d) + boxWidth / 2; })
+               .attr('y', _chart.effectiveHeight());
         gColsText.exit().remove();
         var gRows = _chartBody.selectAll('g.rows');
         if (gRows.empty()) {
@@ -200,9 +249,9 @@ dc.heatMap = function (parent, chartGroup) {
               .attr('x', 0)
               .attr('dx', -2)
               .on('click', _chart.yAxisOnClick())
-              .text(function (d) { return d; });
+              .text(_chart.rowsLabel());
         dc.transition(gRowsText, _chart.transitionDuration())
-              .text(function (d) { return d; })
+              .text(_chart.rowsLabel())
               .attr('y', function (d) { return rows(d) + boxHeight / 2; });
         gRowsText.exit().remove();
 
@@ -221,68 +270,103 @@ dc.heatMap = function (parent, chartGroup) {
         }
         return _chart;
     };
+
     /**
-     #### .boxOnClick([handler])
-     Gets or sets the handler that fires when an individual cell is clicked in the heatmap.
-     By default, filtering of the cell will be toggled.
-     **/
-    _chart.boxOnClick = function (f) {
+     * Gets or sets the handler that fires when an individual cell is clicked in the heatmap.
+     * By default, filtering of the cell will be toggled.
+     * @method boxOnClick
+     * @memberof dc.heatMap
+     * @instance
+     * @example
+     * // default box on click handler
+     * chart.boxOnClick(function (d) {
+     *     var filter = d.key;
+     *     dc.events.trigger(function () {
+     *         _chart.filter(filter);
+     *         _chart.redrawGroup();
+     *     });
+     * });
+     * @param  {Function} [handler]
+     * @return {Function}
+     * @return {dc.heatMap}
+     */
+    _chart.boxOnClick = function (handler) {
         if (!arguments.length) {
             return _boxOnClick;
         }
-        _boxOnClick = f;
+        _boxOnClick = handler;
         return _chart;
     };
 
     /**
-     #### .xAxisOnClick([handler])
-     Gets or sets the handler that fires when a column tick is clicked in the x axis.
-     By default, if any cells in the column are unselected, the whole column will be selected,
-     otherwise the whole column will be unselected.
-     **/
-    _chart.xAxisOnClick = function (f) {
+     * Gets or sets the handler that fires when a column tick is clicked in the x axis.
+     * By default, if any cells in the column are unselected, the whole column will be selected,
+     * otherwise the whole column will be unselected.
+     * @method xAxisOnClick
+     * @memberof dc.heatMap
+     * @instance
+     * @param  {Function} [handler]
+     * @return {Function}
+     * @return {dc.heatMap}
+     */
+    _chart.xAxisOnClick = function (handler) {
         if (!arguments.length) {
             return _xAxisOnClick;
         }
-        _xAxisOnClick = f;
+        _xAxisOnClick = handler;
         return _chart;
     };
 
     /**
-     #### .yAxisOnClick([handler])
-     Gets or sets the handler that fires when a row tick is clicked in the y axis.
-     By default, if any cells in the row are unselected, the whole row will be selected,
-     otherwise the whole row will be unselected.
-     **/
-    _chart.yAxisOnClick = function (f) {
+     * Gets or sets the handler that fires when a row tick is clicked in the y axis.
+     * By default, if any cells in the row are unselected, the whole row will be selected,
+     * otherwise the whole row will be unselected.
+     * @method yAxisOnClick
+     * @memberof dc.heatMap
+     * @instance
+     * @param  {Function} [handler]
+     * @return {Function}
+     * @return {dc.heatMap}
+     */
+    _chart.yAxisOnClick = function (handler) {
         if (!arguments.length) {
             return _yAxisOnClick;
         }
-        _yAxisOnClick = f;
+        _yAxisOnClick = handler;
         return _chart;
     };
 
     /**
-     #### .xBorderRadius([value])
-     Gets or sets the X border radius.  Set to 0 to get full rectangles.  Default: 6.75
+     * Gets or sets the X border radius.  Set to 0 to get full rectangles.
+     * @method xBorderRadius
+     * @memberof dc.heatMap
+     * @instance
+     * @param  {Number} [xBorderRadius=6.75]
+     * @return {Number}
+     * @return {dc.heatMap}
      */
-    _chart.xBorderRadius = function (d) {
+    _chart.xBorderRadius = function (xBorderRadius) {
         if (!arguments.length) {
             return _xBorderRadius;
         }
-        _xBorderRadius = d;
+        _xBorderRadius = xBorderRadius;
         return _chart;
     };
 
     /**
-     #### .xBorderRadius([value])
-     Gets or sets the Y border radius.  Set to 0 to get full rectangles.  Default: 6.75
+     * Gets or sets the Y border radius.  Set to 0 to get full rectangles.
+     * @method yBorderRadius
+     * @memberof dc.heatMap
+     * @instance
+     * @param  {Number} [yBorderRadius=6.75]
+     * @return {Number}
+     * @return {dc.heatMap}
      */
-    _chart.yBorderRadius = function (d) {
+    _chart.yBorderRadius = function (yBorderRadius) {
         if (!arguments.length) {
             return _yBorderRadius;
         }
-        _yBorderRadius = d;
+        _yBorderRadius = yBorderRadius;
         return _chart;
     };
 

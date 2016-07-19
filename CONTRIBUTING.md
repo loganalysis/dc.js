@@ -1,27 +1,32 @@
 # How to contribute
 
-## Issue Submission Guidlines
+## Issue Submission Guidelines
 
-* If you have a problem with your code, please ask your question on stackoverflow.com or the [user group](https://groups.google.com/forum/?fromgroups#!forum/dc-js-user-group)
-* It will be far, far easier for others to understand your problem or bug if you demonstrate it with a short example on http://jsfiddle.net/ or on http://bl.ocks.org/
+* Because of the volume of requests, we do not use the issue tracker for support questions. If you are trying to get a particular effect or you have a problem with your code, please ask your question on stackoverflow.com or the [user group](https://groups.google.com/forum/?fromgroups#!forum/dc-js-user-group)
+* It will be far, far easier for others to understand your problem or bug if you demonstrate it with a short example on http://jsfiddle.net/ or on http://bl.ocks.org/ (http://blockbuilder.org/ is a great way to edit bl.ocks!). Here are some examples you can fork to get started:
+  * [example jsFiddle](http://jsfiddle.net/gordonwoodhull/os27xcg2/) with some data and a chart.
+  * [blank jsFiddle](http://jsfiddle.net/gordonwoodhull/u57bfje8/) using the latest dc.js from github.io
+  * the same example [as a bl.ock](http://bl.ocks.org/gordonwoodhull/ecce8e32d64c662cffd5); [on blockbuilder.org](http://blockbuilder.org/gordonwoodhull/ecce8e32d64c662cffd5)
+  * a blank template bl.ock [on blockbuilder.org](http://blockbuilder.org/gordonwoodhull/9ab997c9a8d7d3380364)
 * For bugs and feature requests submit a [github issue](http://github.com/dc-js/dc.js/issues)
   * Please include the version of DC you are using
   * If you can, please try the latest version of DC on the [master](https://raw.github.com/dc-js/dc.js/master/dc.js) branch to see if your issue has already been addressed or is otherwise affected by recent changes.
 
 ## Pull Request Guidelines
 
-* Fork the repository
+* Fork the repository.
+* As with all pull requests, put your changes in a branch. For contributions that change the dc.js API, create your branch off of `develop`. If your contribution does not change the API, branch off of `master` instead.
 * Make changes to the files in `src/` not dc.js
 * Add tests to `spec/`. Feel free to create a new file if needed.
 * Run `grunt server` and go to http://localhost:8888/spec to develop your tests.
-* Run `grunt lint` to fix any final linting issues via jshint.
+* If your changes might affect transitions, go to the relevant transition tests in http://localhost:8888/web/transitions and watch them by eye to see if they make sense
+* Run `grunt lint` to confirm that your code meets the dc.js style guidelines.
 * Run `grunt test` to confirm that all tests will pass on phantomjs.
-* Run `grunt jshint` and `grunt jscs` to confirm that your code meets the dc.js style guidelines
 * Commit your changes to `src/*` and `spec/*` but not any build artifacts.  (Build artifacts include `dc.*js*`, `web/docs/*`, `web/js/*`)
-* Submit a pull request
-* If you merge master or another branch into your patchset, please rebase against master.
-* The DC maintainer team will review and build the artifacts when merging
-* If you continue making changes to your fork of `dc.js`, create a branch for each pull request
+* Submit a pull request.
+* If you merge `develop` or `master` into your patchset, please rebase against develop. (It's okay to rewrite history for PRs, because these branches are temporary and it's unlikely that anyone is tracking your feature branch.)
+* The DC maintainer team will review and build the artifacts when merging.
+* If you continue making changes to your fork of `dc.js`, create a separate branch for each pull request and keep the changes separate.
 
 #### Coding Conventions
 
@@ -45,43 +50,3 @@ Or you can just run the commands manually before committing.
 
 Running `grunt server` will host the jasmine specs at http://localhost:8888/spec.
 Please use `.transitionDuration(0)` for all chart tests.
-
-# Merging Pull Requests
-
-_for maintainers_
-
-Ensure origin looks like this in `.git/config`. The key element here is the second fetch statement
-```
-[remote "origin"]
-  url = git@github.com:dc-js/dc.js.git
-  fetch = +refs/heads/*:refs/remotes/origin/*
-  fetch = +refs/pull/*/head:refs/remotes/origin/pr/*
-```
-
-Run these commands (or their approximation):
-```
-# clean master branch
-git stash
-
-# update node modules that may be pulled into `web/`
-npm update
-
-# double check your aren't going to blow away local commits
-git fetch origin
-git checkout master
-git diff origin/master
-
-# Merge - subsitute the PR number for $PR. Warning this runs git reset --hard, ensure you are ready
-grunt merge:$PR
-
-# manually verify the changes and review the demos/examples
-
-# deploy
-git push origin master
-
-# review changes before site deployment
-git diff origin/gh-pages master:web
-grunt web
-```
-
-If needed, the baseline test for the demos can be rebuilt by running `grunt update-stock-regression`.

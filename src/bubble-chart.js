@@ -1,43 +1,35 @@
 /**
-## Bubble Chart
-Includes: [Bubble Mixin](#bubble-mixin), [Coordinate Grid Mixin](#coordinate-grid-mixin)
-
-A concrete implementation of a general purpose bubble chart that allows data visualization using the
-following dimensions:
-
-* x axis position
-* y axis position
-* bubble radius
-* color
-
-Examples:
-* [Nasdaq 100 Index](http://dc-js.github.com/dc.js/)
-* [US Venture Capital Landscape 2011](http://dc-js.github.com/dc.js/vc/index.html)
-#### dc.bubbleChart(parent[, chartGroup])
-Create a bubble chart instance and attach it to the given parent element.
-
-Parameters:
-* parent : string | node | selection | compositeChart - any valid
- [d3 single selector](https://github.com/mbostock/d3/wiki/Selections#selecting-elements) specifying
- a dom block element such as a div; or a dom element or d3 selection.
-* chartGroup : string (optional) - name of the chart group this chart instance should be placed in.
- Interaction with a chart will only trigger events and redraws within the chart's group.
-
-Returns:
-A newly created bubble chart instance
-
-```js
-// create a bubble chart under #chart-container1 element using the default global chart group
-var bubbleChart1 = dc.bubbleChart('#chart-container1');
-// create a bubble chart under #chart-container2 element using chart group A
-var bubbleChart2 = dc.bubbleChart('#chart-container2', 'chartGroupA');
-```
-
-**/
+ * A concrete implementation of a general purpose bubble chart that allows data visualization using the
+ * following dimensions:
+ * - x axis position
+ * - y axis position
+ * - bubble radius
+ * - color
+ *
+ * Examples:
+ * - {@link http://dc-js.github.com/dc.js/ Nasdaq 100 Index}
+ * - {@link http://dc-js.github.com/dc.js/vc/index.html US Venture Capital Landscape 2011}
+ * @class bubbleChart
+ * @memberof dc
+ * @mixes dc.bubbleMixin
+ * @mixes dc.coordinateGridMixin
+ * @example
+ * // create a bubble chart under #chart-container1 element using the default global chart group
+ * var bubbleChart1 = dc.bubbleChart('#chart-container1');
+ * // create a bubble chart under #chart-container2 element using chart group A
+ * var bubbleChart2 = dc.bubbleChart('#chart-container2', 'chartGroupA');
+ * @param {String|node|d3.selection} parent - Any valid
+ * {@link https://github.com/mbostock/d3/wiki/Selections#selecting-elements d3 single selector} specifying
+ * a dom block element such as a div; or a dom element or d3 selection.
+ * @param {String} [chartGroup] - The name of the chart group this chart instance should be placed in.
+ * Interaction with a chart will only trigger events and redraws within the chart's group.
+ * @return {dc.bubbleChart}
+ */
 dc.bubbleChart = function (parent, chartGroup) {
     var _chart = dc.bubbleMixin(dc.coordinateGridMixin({}));
 
     var _elasticRadius = false;
+    var _sortBubbleSize = false;
 
     _chart.transitionDuration(750);
 
@@ -46,16 +38,38 @@ dc.bubbleChart = function (parent, chartGroup) {
     };
 
     /**
-    #### .elasticRadius([boolean])
-    Turn on or off the elastic bubble radius feature, or return the value of the flag. If this
-    feature is turned on, then bubble radii will be automatically rescaled to fit the chart better.
-
-    **/
-    _chart.elasticRadius = function (_) {
+     * Turn on or off the elastic bubble radius feature, or return the value of the flag. If this
+     * feature is turned on, then bubble radii will be automatically rescaled to fit the chart better.
+     * @method elasticRadius
+     * @memberof dc.bubbleChart
+     * @instance
+     * @param {Boolean} [elasticRadius=false]
+     * @return {Boolean}
+     * @return {dc.bubbleChart}
+     */
+    _chart.elasticRadius = function (elasticRadius) {
         if (!arguments.length) {
             return _elasticRadius;
         }
-        _elasticRadius = _;
+        _elasticRadius = elasticRadius;
+        return _chart;
+    };
+
+    /**
+     * Turn on or off the bubble sorting feature, or return the value of the flag. If enabled,
+     * bubbles will be sorted by their radius, with smaller bubbles in front.
+     * @method sortBubbleSize
+     * @memberof dc.bubbleChart
+     * @instance
+     * @param {Boolean} [sortBubbleSize=false]
+     * @return {Boolean}
+     * @return {dc.bubbleChart}
+     */
+    _chart.sortBubbleSize = function (sortBubbleSize) {
+        if (!arguments.length) {
+            return _sortBubbleSize;
+        }
+        _sortBubbleSize = sortBubbleSize;
         return _chart;
     };
 
@@ -66,8 +80,18 @@ dc.bubbleChart = function (parent, chartGroup) {
 
         _chart.r().range([_chart.MIN_RADIUS, _chart.xAxisLength() * _chart.maxBubbleRelativeSize()]);
 
+        var data = _chart.data();
+        if (_sortBubbleSize) {
+            // sort descending so smaller bubbles are on top
+            var radiusAccessor = _chart.radiusValueAccessor();
+            data.sort(function (a, b) { return d3.descending(radiusAccessor(a), radiusAccessor(b)); });
+        }
         var bubbleG = _chart.chartBodyG().selectAll('g.' + _chart.BUBBLE_NODE_CLASS)
-            .data(_chart.data(), function (d) { return d.key; });
+                .data(data, function (d) { return d.key; });
+        if (_sortBubbleSize) {
+            // Call order here to update dom order based on sort
+            bubbleG.order();
+        }
 
         renderNodes(bubbleG);
 
@@ -78,7 +102,7 @@ dc.bubbleChart = function (parent, chartGroup) {
         _chart.fadeDeselectedArea();
     };
 
-    function renderNodes(bubbleG) {
+    function renderNodes (bubbleG) {
         var bubbleGEnter = bubbleG.enter().append('g');
 
         bubbleGEnter
@@ -104,7 +128,7 @@ dc.bubbleChart = function (parent, chartGroup) {
         _chart._doRenderTitles(bubbleGEnter);
     }
 
-    function updateNodes(bubbleG) {
+    function updateNodes (bubbleG) {
         dc.transition(bubbleG, _chart.transitionDuration())
             .attr('transform', bubbleLocator)
             .selectAll('circle.' + _chart.BUBBLE_CLASS)
@@ -120,11 +144,11 @@ dc.bubbleChart = function (parent, chartGroup) {
         _chart.doUpdateTitles(bubbleG);
     }
 
-    function removeNodes(bubbleG) {
+    function removeNodes (bubbleG) {
         bubbleG.exit().remove();
     }
 
-    function bubbleX(d) {
+    function bubbleX (d) {
         var x = _chart.x()(_chart.keyAccessor()(d));
         if (isNaN(x)) {
             x = 0;
@@ -132,7 +156,7 @@ dc.bubbleChart = function (parent, chartGroup) {
         return x;
     }
 
-    function bubbleY(d) {
+    function bubbleY (d) {
         var y = _chart.y()(_chart.valueAccessor()(d));
         if (isNaN(y)) {
             y = 0;

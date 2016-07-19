@@ -1,10 +1,12 @@
 /**
-## Bubble Mixin
-Includes: [Color Mixin](#color-mixin)
-
-This Mixin provides reusable functionalities for any chart that needs to visualize data using bubbles.
-
-**/
+ * This Mixin provides reusable functionalities for any chart that needs to visualize data using bubbles.
+ * @name bubbleMixin
+ * @memberof dc
+ * @mixin
+ * @mixes dc.colorMixin
+ * @param {Object} _chart
+ * @return {dc.bubbleMixin}
+ */
 dc.bubbleMixin = function (_chart) {
     var _maxBubbleRelativeSize = 0.3;
     var _minRadiusWithLabel = 10;
@@ -28,32 +30,42 @@ dc.bubbleMixin = function (_chart) {
     };
 
     /**
-    #### .r([bubbleRadiusScale])
-    Get or set the bubble radius scale. By default the bubble chart uses
-    `d3.scale.linear().domain([0, 100])` as its r scale .
-
-    **/
-    _chart.r = function (_) {
+     * Get or set the bubble radius scale. By default the bubble chart uses
+     * {@link https://github.com/mbostock/d3/wiki/Quantitative-Scales#linear d3.scale.linear().domain([0, 100])}
+     * as its radius scale.
+     * @method r
+     * @memberof dc.bubbleMixin
+     * @instance
+     * @see {@link http://github.com/mbostock/d3/wiki/Scales d3.scale}
+     * @param {d3.scale} [bubbleRadiusScale=d3.scale.linear().domain([0, 100])]
+     * @return {d3.scale}
+     * @return {dc.bubbleMixin}
+     */
+    _chart.r = function (bubbleRadiusScale) {
         if (!arguments.length) {
             return _r;
         }
-        _r = _;
+        _r = bubbleRadiusScale;
         return _chart;
     };
 
     /**
-    #### .radiusValueAccessor([radiusValueAccessor])
-    Get or set the radius value accessor function. If set, the radius value accessor function will
-    be used to retrieve a data value for each bubble. The data retrieved then will be mapped using
-    the r scale to the actual bubble radius. This allows you to encode a data dimension using bubble
-    size.
-
-    **/
-    _chart.radiusValueAccessor = function (_) {
+     * Get or set the radius value accessor function. If set, the radius value accessor function will
+     * be used to retrieve a data value for each bubble. The data retrieved then will be mapped using
+     * the r scale to the actual bubble radius. This allows you to encode a data dimension using bubble
+     * size.
+     * @method radiusValueAccessor
+     * @memberof dc.bubbleMixin
+     * @instance
+     * @param {Function} [radiusValueAccessor]
+     * @return {Function}
+     * @return {dc.bubbleMixin}
+     */
+    _chart.radiusValueAccessor = function (radiusValueAccessor) {
         if (!arguments.length) {
             return _rValueAccessor;
         }
-        _rValueAccessor = _;
+        _rValueAccessor = radiusValueAccessor;
         return _chart;
     };
 
@@ -84,8 +96,16 @@ dc.bubbleMixin = function (_chart) {
         return _chart.label()(d);
     };
 
+    var shouldLabel = function (d) {
+        return (_chart.bubbleR(d) > _minRadiusWithLabel);
+    };
+
     var labelOpacity = function (d) {
-        return (_chart.bubbleR(d) > _minRadiusWithLabel) ? 1 : 0;
+        return shouldLabel(d) ? 1 : 0;
+    };
+
+    var labelPointerEvent = function (d) {
+        return shouldLabel(d) ? 'all' : 'none';
     };
 
     _chart._doRenderLabel = function (bubbleGEnter) {
@@ -101,6 +121,7 @@ dc.bubbleMixin = function (_chart) {
 
             label
                 .attr('opacity', 0)
+                .attr('pointer-events', labelPointerEvent)
                 .text(labelFunction);
             dc.transition(label, _chart.transitionDuration())
                 .attr('opacity', labelOpacity);
@@ -110,6 +131,7 @@ dc.bubbleMixin = function (_chart) {
     _chart.doUpdateLabels = function (bubbleGEnter) {
         if (_chart.renderLabel()) {
             var labels = bubbleGEnter.selectAll('text')
+                .attr('pointer-events', labelPointerEvent)
                 .text(labelFunction);
             dc.transition(labels, _chart.transitionDuration())
                 .attr('opacity', labelOpacity);
@@ -137,30 +159,56 @@ dc.bubbleMixin = function (_chart) {
     };
 
     /**
-    #### .minRadiusWithLabel([radius])
-    Get or set the minimum radius for label rendering. If a bubble's radius is less than this value
-    then no label will be rendered.  Default: 10
-
-    **/
-    _chart.minRadiusWithLabel = function (_) {
+     * Get or set the minimum radius. This will be used to initialize the radius scale's range.
+     * @method minRadius
+     * @memberof dc.bubbleMixin
+     * @instance
+     * @param {Number} [radius=10]
+     * @return {Number}
+     * @return {dc.bubbleMixin}
+     */
+    _chart.minRadius = function (radius) {
         if (!arguments.length) {
-            return _minRadiusWithLabel;
+            return _chart.MIN_RADIUS;
         }
-        _minRadiusWithLabel = _;
+        _chart.MIN_RADIUS = radius;
         return _chart;
     };
 
     /**
-    #### .maxBubbleRelativeSize([relativeSize])
-    Get or set the maximum relative size of a bubble to the length of x axis. This value is useful
-    when the difference in radius between bubbles is too great. Default: 0.3
+     * Get or set the minimum radius for label rendering. If a bubble's radius is less than this value
+     * then no label will be rendered.
+     * @method minRadiusWithLabel
+     * @memberof dc.bubbleMixin
+     * @instance
+     * @param {Number} [radius=10]
+     * @return {Number}
+     * @return {dc.bubbleMixin}
+     */
 
-    **/
-    _chart.maxBubbleRelativeSize = function (_) {
+    _chart.minRadiusWithLabel = function (radius) {
+        if (!arguments.length) {
+            return _minRadiusWithLabel;
+        }
+        _minRadiusWithLabel = radius;
+        return _chart;
+    };
+
+    /**
+     * Get or set the maximum relative size of a bubble to the length of x axis. This value is useful
+     * when the difference in radius between bubbles is too great.
+     * @method maxBubbleRelativeSize
+     * @memberof dc.bubbleMixin
+     * @instance
+     * @param {Number} [relativeSize=0.3]
+     * @return {Number}
+     * @return {dc.bubbleMixin}
+     */
+    _chart.maxBubbleRelativeSize = function (relativeSize) {
         if (!arguments.length) {
             return _maxBubbleRelativeSize;
         }
-        _maxBubbleRelativeSize = _;
+        _maxBubbleRelativeSize = relativeSize;
         return _chart;
     };
 
